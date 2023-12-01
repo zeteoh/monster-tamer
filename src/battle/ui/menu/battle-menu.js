@@ -1,3 +1,4 @@
+import Phaser from "../../../lib/phaser.js";
 import { MONSTER_ASSET_KEYS } from "../../../assets/asset-key.js";
 
 const BATTLE_MENU_OPTIONS = Object.freeze({
@@ -13,11 +14,30 @@ const battleUiTextStyle = {
 };
 
 export class BattleMenu {
+  /**
+   *@type {Phaser.Scene} doing this gives the scene the Phaser.scene functions with vscode intellisense
+   */
   #scene;
+    /**
+   *@type {Phaser.GameObjects.Container}
+   */
   #mainBattleMenuPhaserContainerGameObject;
+    /**
+   *@type {Phaser.GameObjects.Container}
+   */
   #moveSelectionSubBattleMenuPhaserContainerGameObject;
+    /**
+   *@type {Phaser.GameObjects.Text} 
+   */
   #battleTextGameObjectLine1;
+    /**
+   *@type {Phaser.GameObjects.Text} 
+   */
   #battleTextGameObjectLine2;
+  /**
+   * 
+   * @param {Phaser.Scene} scene the Phaser 3 scene the battle menu will be added to
+   */
   constructor(scene) {
     this.#scene = scene;
 
@@ -28,17 +48,17 @@ export class BattleMenu {
 
   //decreasing transparency to 0
   showMainBattleMenu() {
-    this.#battleTextGameObjectLine1.setText('what should')
+    this.#battleTextGameObjectLine1.setText("what should");
     this.#mainBattleMenuPhaserContainerGameObject.setAlpha(1);
-    this.#battleTextGameObjectLine1.setAlpha(1)
-    this.#battleTextGameObjectLine2.setAlpha(1)
+    this.#battleTextGameObjectLine1.setAlpha(1);
+    this.#battleTextGameObjectLine2.setAlpha(1);
   }
 
   //increasing transparency to max to hide
   hideMainBattleMenu() {
     this.#mainBattleMenuPhaserContainerGameObject.setAlpha(0);
-    this.#battleTextGameObjectLine1.setAlpha(0)
-    this.#battleTextGameObjectLine2.setAlpha(0)
+    this.#battleTextGameObjectLine1.setAlpha(0);
+    this.#battleTextGameObjectLine2.setAlpha(0);
   }
 
   showMonsterAtackSubMenu() {
