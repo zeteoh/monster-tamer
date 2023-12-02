@@ -127,6 +127,16 @@ export class BattleScene extends Phaser.Scene {
     console.log(this.#cursorKeys.space.isDown)
     if(wasSpaceKeyPressed){
       this.#battleMenu.handlePlayerInput('OK')
+
+      //check if the player selectd an attack, and update display text
+      if(this.#battleMenu.selectedAttack === undefined) return
+      console.log(this.#battleMenu.selectedAttack)
+      console.log(`Player selected the following move: ${this.#battleMenu.selectedAttack}`)
+      this.#battleMenu.hideMonsterAtackSubMenu()
+      this.#battleMenu.updateInfoPaneMessagesAndWaitForInput(['Your monster attacks the enemy'], ()=>{
+        this.#battleMenu.showMainBattleMenu()
+      })
+
       return
     }
 
