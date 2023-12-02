@@ -5,6 +5,7 @@ import {
   MONSTER_ASSET_KEYS,
 } from "../assets/asset-key.js";
 import { BattleMenu } from "../battle/ui/menu/battle-menu.js";
+import { DIRECTION } from "../common/direction.js";
 import Phaser from "../lib/phaser.js";
 import { SCENE_KEYS } from "./scene-keys.js";
 
@@ -13,6 +14,10 @@ export class BattleScene extends Phaser.Scene {
    * @type {BattleMenu}
    */
   #battleMenu;
+  /**
+   * @type {Phaser.Types.Input.Keyboard.CursorKeys}
+   */
+  #cursorKeys
   constructor() {
     super({
       key: SCENE_KEYS.BATTLE_SCENE,
@@ -108,10 +113,53 @@ export class BattleScene extends Phaser.Scene {
         fontStyle: "italic",
       }),
     ]);
+    // render outy main info and sub info panes
     this.#battleMenu = new BattleMenu(this)
     this.#battleMenu.showMainBattleMenu()
+
+    //creates up down left right and shift keys automatically
+    this.#cursorKeys = this.input.keyboard.createCursorKeys()
   }
 
+  update(){
+    //will only return true one time when the space key is pressed and wont register true when held
+    const wasSpaceKeyPressed = Phaser.Input.Keyboard.JustDown(this.#cursorKeys.space)
+    console.log(this.#cursorKeys.space.isDown)
+    if(wasSpaceKeyPressed){
+      this.#battleMenu.handlePlayerInput('OK')
+      return
+    }
+
+    if(Phaser.Input.Keyboard.JustDown(this.#cursorKeys.shift)){
+      this.#battleMenu.handlePlayerInput('CANCEL')
+      return
+    }
+
+    /**
+     * @type {import('../common/direction.js').Direction}
+     */
+    let selectedDirection = DIRECTION.NONE;
+    if(this.#cursorKeys.left.isDown){
+      selectedDirection = DIRECTION.LEFT
+    }else if(this.#cursorKeys.right.isDown){
+      selectedDirection = DIRECTION.RIGHT
+    }else if(this.#cursorKeys.up.isDown){
+      selectedDirection = DIRECTION.UP
+    }else if(this.#cursorKeys.down.isDown){
+      selectedDirection = DIRECTION.DOWN
+    }
+
+    if(selectedDirection !== DIRECTION.NONE){
+      this.#battleMenu.handlePlayerInput(selectedDirection)
+    }
+  }
+
+  /**
+   * 
+   * @param {number} x the x position to place the healthbar contianer 
+   * @param {number} y the y position to place the healthbar contianer
+   * @returns {Phaser.GameObjects.Container} 
+   */
   #createHealthBar(x, y) {
     const scaleY = 0.7;
     const leftCap = this.add

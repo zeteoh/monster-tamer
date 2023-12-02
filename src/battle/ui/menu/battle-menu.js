@@ -69,6 +69,24 @@ export class BattleMenu {
     this.#moveSelectionSubBattleMenuPhaserContainerGameObject.setAlpha(0);
   }
 
+  /**
+   * 
+   * @param {import('../../../common/direction.js').Direction|'OK'|'CANCEL'} input 
+   */
+  handlePlayerInput(input){
+    console.log(input);
+    if(input == 'CANCEL'){
+      this.hideMonsterAtackSubMenu();
+      this.showMainBattleMenu()
+      return
+    }
+    if(input == 'OK'){
+      this.hideMainBattleMenu();
+      this.showMonsterAtackSubMenu()
+      return
+    }
+  }
+
   #createMainBattleMenu() {
     this.#battleTextGameObjectLine1 = this.#scene.add.text(
       20,
