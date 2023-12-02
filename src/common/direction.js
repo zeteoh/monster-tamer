@@ -1,4 +1,3 @@
-
 /**
  * @typedef {keyof typeof DIRECTION} Direction
  */
