@@ -1,9 +1,9 @@
 import {
   BATTLE_ASSET_KEYS,
-  BATTLE_BACKGROUND_ASSET_KEYS,
-  HEALTH_BAR_ASSET_KEYS,
   MONSTER_ASSET_KEYS,
 } from "../assets/asset-key.js";
+import { Background } from "../battle/background.js";
+import { HealthBar } from "../battle/ui/health-bar.js";
 import { BattleMenu } from "../battle/ui/menu/battle-menu.js";
 import { DIRECTION } from "../common/direction.js";
 import Phaser from "../lib/phaser.js";
@@ -17,7 +17,7 @@ export class BattleScene extends Phaser.Scene {
   /**
    * @type {Phaser.Types.Input.Keyboard.CursorKeys}
    */
-  #cursorKeys
+  #cursorKeys;
   constructor() {
     super({
       key: SCENE_KEYS.BATTLE_SCENE,
@@ -26,6 +26,8 @@ export class BattleScene extends Phaser.Scene {
   }
 
   create() {
+    const background = new Background(this);
+    background.showForest()
     /**
      * @IMPORTANT phaser will render the image in the order it is placed, so always rendere the background image first
      * alternatively, can set depth value so that we can change the z value between images, somewhat like the z value in css
@@ -39,7 +41,6 @@ export class BattleScene extends Phaser.Scene {
      * @argumentTwo - y position of the image where a positive y value signifies position downwards
      * @setOrigin - setting 0 means that the object is placed in the middle. TLDR, it holds the middle point of the image
      */
-    this.add.image(0, 0, BATTLE_BACKGROUND_ASSET_KEYS.FOREST).setOrigin(0);
     console.log(`[${BattleScene.name}:create] invoked`);
     this.add.image(768, 144, MONSTER_ASSET_KEYS.CARNODUSK, 0);
     this.add.image(256, 316, MONSTER_ASSET_KEYS.IGUANIGNITE, 0).setFlipX(true);
@@ -62,7 +63,8 @@ export class BattleScene extends Phaser.Scene {
         .image(0, 0, BATTLE_ASSET_KEYS.HEALTH_BAR_BACKGROUND)
         .setOrigin(0),
       playerMonsterName,
-      this.#createHealthBar(34, 34),
+      new HealthBar(this,34,34).container,
+      // this.#createHealthBar(34, 34),
       this.add.text(playerMonsterName.width + 35, 23, "L5", {
         color: "#ED474B",
         fontSize: "28px",
@@ -102,7 +104,7 @@ export class BattleScene extends Phaser.Scene {
         .setOrigin(0)
         .setScale(1, 0.8),
       enemyMonsterName,
-      this.#createHealthBar(34, 34),
+      new HealthBar(this,34,34).container,
       this.add.text(enemyMonsterName.width + 35, 23, "L5", {
         color: "#ED474B",
         fontSize: "28px",
@@ -114,80 +116,61 @@ export class BattleScene extends Phaser.Scene {
       }),
     ]);
     // render outy main info and sub info panes
-    this.#battleMenu = new BattleMenu(this)
-    this.#battleMenu.showMainBattleMenu()
+    this.#battleMenu = new BattleMenu(this);
+    this.#battleMenu.showMainBattleMenu();
 
     //creates up down left right and shift keys automatically
-    this.#cursorKeys = this.input.keyboard.createCursorKeys()
+    this.#cursorKeys = this.input.keyboard.createCursorKeys();
   }
 
-  update(){
+  update() {
     //will only return true one time when the space key is pressed and wont register true when held
-    const wasSpaceKeyPressed = Phaser.Input.Keyboard.JustDown(this.#cursorKeys.space)
-    console.log(this.#cursorKeys.space.isDown)
-    if(wasSpaceKeyPressed){
-      this.#battleMenu.handlePlayerInput('OK')
+    const wasSpaceKeyPressed = Phaser.Input.Keyboard.JustDown(
+      this.#cursorKeys.space
+    );
+    console.log(this.#cursorKeys.space.isDown);
+    if (wasSpaceKeyPressed) {
+      this.#battleMenu.handlePlayerInput("OK");
 
       //check if the player selectd an attack, and update display text
-      if(this.#battleMenu.selectedAttack === undefined) return
-      console.log(this.#battleMenu.selectedAttack)
-      console.log(`Player selected the following move: ${this.#battleMenu.selectedAttack}`)
-      this.#battleMenu.hideMonsterAtackSubMenu()
-      this.#battleMenu.updateInfoPaneMessagesAndWaitForInput(['Your monster attacks the enemy'], ()=>{
-        this.#battleMenu.showMainBattleMenu()
-      })
+      if (this.#battleMenu.selectedAttack === undefined) return;
+      console.log(this.#battleMenu.selectedAttack);
+      console.log(
+        `Player selected the following move: ${this.#battleMenu.selectedAttack}`
+      );
+      this.#battleMenu.hideMonsterAtackSubMenu();
+      this.#battleMenu.updateInfoPaneMessagesAndWaitForInput(
+        ["Your monster attacks the enemy"],
+        () => {
+          this.#battleMenu.showMainBattleMenu();
+        }
+      );
 
-      return
+      return;
     }
 
-    if(Phaser.Input.Keyboard.JustDown(this.#cursorKeys.shift)){
-      this.#battleMenu.handlePlayerInput('CANCEL')
-      return
+    if (Phaser.Input.Keyboard.JustDown(this.#cursorKeys.shift)) {
+      this.#battleMenu.handlePlayerInput("CANCEL");
+      return;
     }
 
     /**
      * @type {import('../common/direction.js').Direction}
      */
     let selectedDirection = DIRECTION.NONE;
-    if(this.#cursorKeys.left.isDown){
-      selectedDirection = DIRECTION.LEFT
-    }else if(this.#cursorKeys.right.isDown){
-      selectedDirection = DIRECTION.RIGHT
-    }else if(this.#cursorKeys.up.isDown){
-      selectedDirection = DIRECTION.UP
-    }else if(this.#cursorKeys.down.isDown){
-      selectedDirection = DIRECTION.DOWN
+    if (this.#cursorKeys.left.isDown) {
+      selectedDirection = DIRECTION.LEFT;
+    } else if (this.#cursorKeys.right.isDown) {
+      selectedDirection = DIRECTION.RIGHT;
+    } else if (this.#cursorKeys.up.isDown) {
+      selectedDirection = DIRECTION.UP;
+    } else if (this.#cursorKeys.down.isDown) {
+      selectedDirection = DIRECTION.DOWN;
     }
 
-    if(selectedDirection !== DIRECTION.NONE){
-      this.#battleMenu.handlePlayerInput(selectedDirection)
+    if (selectedDirection !== DIRECTION.NONE) {
+      this.#battleMenu.handlePlayerInput(selectedDirection);
     }
-  }
-
-  /**
-   * 
-   * @param {number} x the x position to place the healthbar contianer 
-   * @param {number} y the y position to place the healthbar contianer
-   * @returns {Phaser.GameObjects.Container} 
-   */
-  #createHealthBar(x, y) {
-    const scaleY = 0.7;
-    const leftCap = this.add
-      .image(x, y, HEALTH_BAR_ASSET_KEYS.LEFT_CAP)
-      .setOrigin(0, 0.5)
-      .setScale(1, scaleY);
-    const middle = this.add
-      .image(leftCap.x + leftCap.width, y, HEALTH_BAR_ASSET_KEYS.MIDDLE)
-      .setOrigin(0, 0.5)
-      .setScale(1, scaleY);
-    //stretches the health bar
-    middle.displayWidth = 360;
-    const rightCap = this.add
-      .image(middle.x + middle.displayWidth, y, HEALTH_BAR_ASSET_KEYS.RIGHT_CAP)
-      .setOrigin(0, 0.5)
-      .setScale(1, scaleY);
-
-    return this.add.container(x, y, [leftCap, middle, rightCap]);
   }
 
 }
