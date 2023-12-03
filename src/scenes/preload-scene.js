@@ -18,9 +18,17 @@ export class PreloadScene extends Phaser.Scene {
   }
   preload() {
     console.log(`[${PreloadScene.name}:preload] invoked`)
+    let basePath;
 
-    const monsterTamerAssetPath = "../assets/images/monster-tamer";
-    const kenneysAssetPath = "../assets/images/kenneys-assets";
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        basePath = '../assets/images';
+    } else {
+        basePath = '/monster-tamer/assets/images';
+    }
+    
+    const monsterTamerAssetPath = `${basePath}/monster-tamer`;
+    const kenneysAssetPath = `${basePath}/kenneys-assets`;
+    
     //preload lifecycle and make it avalailable in cache but cannot be displayed yet
     //battle grounds
     this.load.image(
