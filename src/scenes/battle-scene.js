@@ -1,6 +1,6 @@
 import { BATTLE_ASSET_KEYS, MONSTER_ASSET_KEYS } from "../assets/asset-key.js";
 import { Background } from "../battle/background.js";
-import { BattleMonster } from "../battle/monsters/battle-monster.js";
+import { EnemyBattleMonster } from "../battle/monsters/enemy-battle-monsters.js";
 import { HealthBar } from "../battle/ui/health-bar.js";
 import { BattleMenu } from "../battle/ui/menu/battle-menu.js";
 import { DIRECTION } from "../common/direction.js";
@@ -17,7 +17,7 @@ export class BattleScene extends Phaser.Scene {
    */
   #cursorKeys;
     /**
-   * @type {BattleMonster}
+   * @type {EnemyBattleMonster}
    */
   #activeEnemyMonster
   constructor() {
@@ -44,7 +44,7 @@ export class BattleScene extends Phaser.Scene {
      * @setOrigin - setting 0 means that the object is placed in the middle. TLDR, it holds the middle point of the image
      */
     console.log(`[${BattleScene.name}:create] invoked`);
-    this.#activeEnemyMonster = new BattleMonster(
+    this.#activeEnemyMonster = new EnemyBattleMonster(
       {
         scene: this,
         monsterDetails: {
@@ -56,8 +56,7 @@ export class BattleScene extends Phaser.Scene {
           baseAttack: 5,
           attackIds: [],
         },
-      },
-      { x: 768, y: 144 }
+      }
     );
     // this.add.image(768, 144, MONSTER_ASSET_KEYS.CARNODUSK, 0);
     this.add.image(256, 316, MONSTER_ASSET_KEYS.IGUANIGNITE, 0).setFlipX(true);
@@ -145,6 +144,8 @@ export class BattleScene extends Phaser.Scene {
       duration: 3000,
       callback: () => console.log("animation completed"),
     });
+    this.#activeEnemyMonster.takeDamage(20)
+    console.log(this.#activeEnemyMonster.isFainted)
   }
 
   update() {
