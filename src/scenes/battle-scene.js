@@ -49,6 +49,7 @@ export class BattleScene extends Phaser.Scene {
      * using a container, we can move all assets in the container together and package them in a container
      */
     //render out the player health bar
+    const playerHealthBar = new HealthBar(this,34,34)
     const playerMonsterName = this.add.text(
       30,
       20,
@@ -63,7 +64,7 @@ export class BattleScene extends Phaser.Scene {
         .image(0, 0, BATTLE_ASSET_KEYS.HEALTH_BAR_BACKGROUND)
         .setOrigin(0),
       playerMonsterName,
-      new HealthBar(this,34,34).container,
+      playerHealthBar.container,
       // this.#createHealthBar(34, 34),
       this.add.text(playerMonsterName.width + 35, 23, "L5", {
         color: "#ED474B",
@@ -89,6 +90,7 @@ export class BattleScene extends Phaser.Scene {
     ]);
 
     //render out the enemy health bar
+    const enemyHealthBar = new HealthBar(this,34,34)
     const enemyMonsterName = this.add.text(
       30,
       20,
@@ -104,7 +106,7 @@ export class BattleScene extends Phaser.Scene {
         .setOrigin(0)
         .setScale(1, 0.8),
       enemyMonsterName,
-      new HealthBar(this,34,34).container,
+      enemyHealthBar.container,
       this.add.text(enemyMonsterName.width + 35, 23, "L5", {
         color: "#ED474B",
         fontSize: "28px",
@@ -121,6 +123,10 @@ export class BattleScene extends Phaser.Scene {
 
     //creates up down left right and shift keys automatically
     this.#cursorKeys = this.input.keyboard.createCursorKeys();
+    playerHealthBar.setMeterPercentageAnimated(0.5,{
+      duration: 3000,
+      callback: ()=> console.log('animation completed')
+    })
   }
 
   update() {
