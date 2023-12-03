@@ -17,19 +17,27 @@ export class BattleScene extends Phaser.Scene {
    * @type {Phaser.Types.Input.Keyboard.CursorKeys}
    */
   #cursorKeys;
-    /**
+  /**
    * @type {EnemyBattleMonster}
    */
-  #activeEnemyMonster
+  #activeEnemyMonster;
   /**
    * @type {PlayerBattleMonster}
    */
-  #activePlayerMonster
+  #activePlayerMonster;
+  /**
+   * @type {number}
+   */
+  #activePlayerAttackIndex;
   constructor() {
     super({
       key: SCENE_KEYS.BATTLE_SCENE,
       //adding active: true can tell the phaser manager to start the scene without being called from the main.js
     });
+  }
+
+  init() {
+    this.#activePlayerAttackIndex = -1;
   }
 
   create() {
@@ -49,51 +57,48 @@ export class BattleScene extends Phaser.Scene {
      * @setOrigin - setting 0 means that the object is placed in the middle. TLDR, it holds the middle point of the image
      */
     console.log(`[${BattleScene.name}:create] invoked`);
-    this.#activeEnemyMonster = new EnemyBattleMonster(
-      {
-        scene: this,
-        monsterDetails: {
-          name: MONSTER_ASSET_KEYS.CARNODUSK,
-          assetKey: MONSTER_ASSET_KEYS.CARNODUSK,
-          assetFrame: 0,
-          maxHp: 25,
-          currentHp: 25,
-          baseAttack: 5,
-          attackIds: [],
-          currentLevel: 5
-        },
-      }
-    );
-    this.#activePlayerMonster = new PlayerBattleMonster(
-      {
-        scene: this,
-        monsterDetails: {
-          name: MONSTER_ASSET_KEYS.IGUANIGNITE,
-          assetKey: MONSTER_ASSET_KEYS.IGUANIGNITE,
-          assetFrame: 0,
-          maxHp: 25,
-          currentHp: 25,
-          baseAttack: 5,
-          attackIds: [],
-          currentLevel: 5
-        },
-      }
-    )
+    this.#activeEnemyMonster = new EnemyBattleMonster({
+      scene: this,
+      monsterDetails: {
+        name: MONSTER_ASSET_KEYS.CARNODUSK,
+        assetKey: MONSTER_ASSET_KEYS.CARNODUSK,
+        assetFrame: 0,
+        maxHp: 25,
+        currentHp: 25,
+        baseAttack: 5,
+        attackIds: [1],
+        currentLevel: 5,
+      },
+    });
+    this.#activePlayerMonster = new PlayerBattleMonster({
+      scene: this,
+      monsterDetails: {
+        name: MONSTER_ASSET_KEYS.IGUANIGNITE,
+        assetKey: MONSTER_ASSET_KEYS.IGUANIGNITE,
+        assetFrame: 0,
+        maxHp: 25,
+        currentHp: 25,
+        baseAttack: 5,
+        attackIds: [2],
+        currentLevel: 5,
+      },
+    });
     /**
      * using a container, we can move all assets in the container together and package them in a container
      */
     //render out the enemy health bar
 
     // render outy main info and sub info panes
-    this.#battleMenu = new BattleMenu(this);
+    this.#battleMenu = new BattleMenu(this, this.#activePlayerMonster);
     this.#battleMenu.showMainBattleMenu();
 
     //creates up down left right and shift keys automatically
     this.#cursorKeys = this.input.keyboard.createCursorKeys();
-    this.#activeEnemyMonster.takeDamage(20, () => {
-      this.#activePlayerMonster.takeDamage(15)
-    })
-    console.log(this.#activeEnemyMonster.isFainted)
+
+    // this.#activeEnemyMonster.takeDamage(20, () => {
+    //   this.#activePlayerMonster.takeDamage(15);
+    // });
+    console.log(this.#activeEnemyMonster.isFainted);
   }
 
   update() {
@@ -111,13 +116,19 @@ export class BattleScene extends Phaser.Scene {
       console.log(
         `Player selected the following move: ${this.#battleMenu.selectedAttack}`
       );
+      this.#activePlayerAttackIndex = this.#battleMenu.selectedAttack;
+      // safe guard for checking if player selected '-' attack moves
+      if (!this.#activePlayerMonster.attacks[this.#activePlayerAttackIndex])
+        return;
+
       this.#battleMenu.hideMonsterAtackSubMenu();
-      this.#battleMenu.updateInfoPaneMessagesAndWaitForInput(
-        ["Your monster attacks the enemy"],
-        () => {
-          this.#battleMenu.showMainBattleMenu();
-        }
-      );
+      this.#handleBattleSequence();
+      // this.#battleMenu.updateInfoPaneMessagesAndWaitForInput(
+      //   ["Your monster attacks the enemy"],
+      //   () => {
+      //     this.#battleMenu.showMainBattleMenu();
+      //   }
+      // );
 
       return;
     }
@@ -144,5 +155,50 @@ export class BattleScene extends Phaser.Scene {
     if (selectedDirection !== DIRECTION.NONE) {
       this.#battleMenu.handlePlayerInput(selectedDirection);
     }
+  }
+
+  #handleBattleSequence() {
+    // general battle flow
+    // show attack used, brief pause
+    // then play attack animation, brief pause
+    // then play damage animation, brief pause
+    // then play health bar animation, brief pause
+    // then repeat the steps above for the other monster
+
+    this.#playerAttack();
+  }
+
+  #playerAttack() {
+    this.#battleMenu.updateInfoPaneMessagesAndWaitForInput(
+      [
+        `${this.#activePlayerMonster.name} used ${
+          this.#activePlayerMonster.attacks[this.#activePlayerAttackIndex].name
+        }`,
+      ],
+      () => {
+        this.time.delayedCall(500, () => {
+          this.#activeEnemyMonster.takeDamage(20, () => {
+            this.#enemyAttack();
+          });
+        });
+      }
+    );
+  }
+
+  #enemyAttack() {
+    this.#battleMenu.updateInfoPaneMessagesAndWaitForInput(
+      [
+        `for ${this.#activeEnemyMonster.name} used ${
+          this.#activeEnemyMonster.attacks[0].name
+        }`,
+      ],
+      () => {
+        this.time.delayedCall(500, () => {
+          this.#activePlayerMonster.takeDamage(20, () => {
+            this.#battleMenu.showMainBattleMenu();
+          });
+        });
+      }
+    );
   }
 }

@@ -11,6 +11,7 @@ import {
   BATTLE_MENU_OPTIONS,
 } from "./battle-menu-options.js";
 import { BATTLE_UI_TEXT_STYLE } from "./battle-menu-config.js";
+import { BattleMonster } from "../../monsters/battle-monster.js";
 
 const BATTLE_MENU_CURSOR_POS = Object.freeze({
   x: 42,
@@ -80,11 +81,17 @@ export class BattleMenu {
    */
   #selectedAttackIndex;
   /**
+   *@type {BattleMonster}
+   */
+  #activePlayerMonster;
+  /**
    *
    * @param {Phaser.Scene} scene the Phaser 3 scene the battle menu will be added to
+   * @param {BattleMonster} activePlayerMonster
    */
-  constructor(scene) {
+  constructor(scene, activePlayerMonster) {
     this.#scene = scene;
+    this.#activePlayerMonster = activePlayerMonster;
     this.#activeBattleMenu = ACTIVE_BATTLE_MENU.BATTLE_MAIN;
     this.#selectedBattleMenuOption = BATTLE_MENU_OPTIONS.FIGHT;
     this.#selectedAttackMenuOption = ATTACK_MOVE_OPTIONS.MOVE_1;
@@ -118,7 +125,7 @@ export class BattleMenu {
       BATTLE_MENU_CURSOR_POS.x,
       BATTLE_MENU_CURSOR_POS.y
     );
-    this.#selectedAttackIndex = undefined
+    this.#selectedAttackIndex = undefined;
   }
 
   //increasing transparency to max to hide
@@ -134,6 +141,7 @@ export class BattleMenu {
   }
 
   hideMonsterAtackSubMenu() {
+  this.#activeBattleMenu = ACTIVE_BATTLE_MENU.BATTLE_MAIN
     this.#moveSelectionSubBattleMenuPhaserContainerGameObject.setAlpha(0);
   }
 
@@ -208,11 +216,10 @@ export class BattleMenu {
       "what should ",
       BATTLE_UI_TEXT_STYLE
     );
-    //TODO: update to use monster data that is passed into this class instance
     this.#battleTextGameObjectLine2 = this.#scene.add.text(
       20,
       512,
-      `${MONSTER_ASSET_KEYS.IGUANIGNITE} do next`,
+      `${this.#activePlayerMonster.name} do next?`,
       BATTLE_UI_TEXT_STYLE
     );
 
@@ -272,12 +279,21 @@ export class BattleMenu {
       )
       .setOrigin(0.5)
       .setScale(2.5);
+
+    /**
+     * @type {string[]}
+     */
+    const attackNames = [];
+    for (let i = 0; i < 4; i++) {
+      attackNames.push(this.#activePlayerMonster.attacks[i]?.name || "-");
+    }
+
     this.#moveSelectionSubBattleMenuPhaserContainerGameObject =
       this.#scene.add.container(0, 448, [
-        this.#scene.add.text(55, 22, "slash", BATTLE_UI_TEXT_STYLE),
-        this.#scene.add.text(240, 22, "growl", BATTLE_UI_TEXT_STYLE),
-        this.#scene.add.text(55, 70, "-", BATTLE_UI_TEXT_STYLE),
-        this.#scene.add.text(240, 70, "-", BATTLE_UI_TEXT_STYLE),
+        this.#scene.add.text(55, 22, attackNames[0], BATTLE_UI_TEXT_STYLE),
+        this.#scene.add.text(240, 22, attackNames[1], BATTLE_UI_TEXT_STYLE),
+        this.#scene.add.text(55, 70, attackNames[2], BATTLE_UI_TEXT_STYLE),
+        this.#scene.add.text(240, 70, attackNames[3], BATTLE_UI_TEXT_STYLE),
         this.#attackBattleMenuCursorPhaserImageGameObject,
       ]);
     this.hideMonsterAtackSubMenu();
@@ -551,7 +567,7 @@ export class BattleMenu {
       return;
     }
     if (this.#selectedBattleMenuOption === BATTLE_MENU_OPTIONS.ITEM) {
-      this.#activeBattleMenu = ACTIVE_BATTLE_MENU.BATTLE_ITEM
+      this.#activeBattleMenu = ACTIVE_BATTLE_MENU.BATTLE_ITEM;
       this.updateInfoPaneMessagesAndWaitForInput(
         ["Your bag is empty..."],
         () => {
@@ -561,7 +577,7 @@ export class BattleMenu {
       return;
     }
     if (this.#selectedBattleMenuOption === BATTLE_MENU_OPTIONS.SWITCH) {
-      this.#activeBattleMenu = ACTIVE_BATTLE_MENU.BATTLE_SWITCH
+      this.#activeBattleMenu = ACTIVE_BATTLE_MENU.BATTLE_SWITCH;
 
       this.updateInfoPaneMessagesAndWaitForInput(
         ["You have no other monsters in your party..."],
@@ -572,7 +588,7 @@ export class BattleMenu {
       return;
     }
     if (this.#selectedBattleMenuOption === BATTLE_MENU_OPTIONS.FLEE) {
-      this.#activeBattleMenu = ACTIVE_BATTLE_MENU.BATTLE_FLEE
+      this.#activeBattleMenu = ACTIVE_BATTLE_MENU.BATTLE_FLEE;
       this.updateInfoPaneMessagesAndWaitForInput(
         ["You fail to run away..."],
         () => {

@@ -1,6 +1,7 @@
 import {
   BATTLE_ASSET_KEYS,
   BATTLE_BACKGROUND_ASSET_KEYS,
+  DATA_ASSET_KEYS,
   HEALTH_BAR_ASSET_KEYS,
   MONSTER_ASSET_KEYS,
   UI_ASSET_KEYS,
@@ -17,18 +18,21 @@ export class PreloadScene extends Phaser.Scene {
     });
   }
   preload() {
-    console.log(`[${PreloadScene.name}:preload] invoked`)
+    console.log(`[${PreloadScene.name}:preload] invoked`);
     let basePath;
 
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-        basePath = '../assets/images';
+    if (
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1"
+    ) {
+      basePath = "../assets/images";
     } else {
-        basePath = '/monster-tamer/assets/images';
+      basePath = "/monster-tamer/assets/images";
     }
-    
+
     const monsterTamerAssetPath = `${basePath}/monster-tamer`;
     const kenneysAssetPath = `${basePath}/kenneys-assets`;
-    
+
     //preload lifecycle and make it avalailable in cache but cannot be displayed yet
     //battle grounds
     this.load.image(
@@ -84,6 +88,11 @@ export class PreloadScene extends Phaser.Scene {
       UI_ASSET_KEYS.CURSOR,
       `${monsterTamerAssetPath}/ui/cursor.png`
     );
+    //loading json data
+    this.load.json(
+      DATA_ASSET_KEYS.ATTACKS,
+      'assets/data/attacks.json'
+    )
   }
 
   create() {
@@ -97,8 +106,8 @@ export class PreloadScene extends Phaser.Scene {
      * @setOrigin - setting 0 means that the object is placed in the middle. TLDR, it holds the middle point of the image
      */
     this.add.image(0, 0, BATTLE_BACKGROUND_ASSET_KEYS.FOREST).setOrigin(0);
-    console.log(`[${PreloadScene.name}:create] invoked`)
+    console.log(`[${PreloadScene.name}:create] invoked`);
     //tells phaser to load the battle scene right after it loads the preload scene
-    this.scene.start(SCENE_KEYS.BATTLE_SCENE)
+    this.scene.start(SCENE_KEYS.BATTLE_SCENE);
   }
 }
