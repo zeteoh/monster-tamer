@@ -1,8 +1,6 @@
-import {
-  BATTLE_ASSET_KEYS,
-  MONSTER_ASSET_KEYS,
-} from "../assets/asset-key.js";
+import { BATTLE_ASSET_KEYS, MONSTER_ASSET_KEYS } from "../assets/asset-key.js";
 import { Background } from "../battle/background.js";
+import { BattleMonster } from "../battle/monsters/battle-monster.js";
 import { HealthBar } from "../battle/ui/health-bar.js";
 import { BattleMenu } from "../battle/ui/menu/battle-menu.js";
 import { DIRECTION } from "../common/direction.js";
@@ -18,6 +16,10 @@ export class BattleScene extends Phaser.Scene {
    * @type {Phaser.Types.Input.Keyboard.CursorKeys}
    */
   #cursorKeys;
+    /**
+   * @type {BattleMonster}
+   */
+  #activeEnemyMonster
   constructor() {
     super({
       key: SCENE_KEYS.BATTLE_SCENE,
@@ -27,7 +29,7 @@ export class BattleScene extends Phaser.Scene {
 
   create() {
     const background = new Background(this);
-    background.showForest()
+    background.showForest();
     /**
      * @IMPORTANT phaser will render the image in the order it is placed, so always rendere the background image first
      * alternatively, can set depth value so that we can change the z value between images, somewhat like the z value in css
@@ -42,14 +44,29 @@ export class BattleScene extends Phaser.Scene {
      * @setOrigin - setting 0 means that the object is placed in the middle. TLDR, it holds the middle point of the image
      */
     console.log(`[${BattleScene.name}:create] invoked`);
-    this.add.image(768, 144, MONSTER_ASSET_KEYS.CARNODUSK, 0);
+    this.#activeEnemyMonster = new BattleMonster(
+      {
+        scene: this,
+        monsterDetails: {
+          name: MONSTER_ASSET_KEYS.CARNODUSK,
+          assetKey: MONSTER_ASSET_KEYS.CARNODUSK,
+          assetFrame: 0,
+          maxHp: 25,
+          currentHp: 25,
+          baseAttack: 5,
+          attackIds: [],
+        },
+      },
+      { x: 768, y: 144 }
+    );
+    // this.add.image(768, 144, MONSTER_ASSET_KEYS.CARNODUSK, 0);
     this.add.image(256, 316, MONSTER_ASSET_KEYS.IGUANIGNITE, 0).setFlipX(true);
 
     /**
      * using a container, we can move all assets in the container together and package them in a container
      */
     //render out the player health bar
-    const playerHealthBar = new HealthBar(this,34,34)
+    const playerHealthBar = new HealthBar(this, 34, 34);
     const playerMonsterName = this.add.text(
       30,
       20,
@@ -90,7 +107,8 @@ export class BattleScene extends Phaser.Scene {
     ]);
 
     //render out the enemy health bar
-    const enemyHealthBar = new HealthBar(this,34,34)
+    // const enemyHealthBar = new HealthBar(this, 34, 34);
+    const enemyHealthBar = this.#activeEnemyMonster._healthBar;
     const enemyMonsterName = this.add.text(
       30,
       20,
@@ -123,10 +141,10 @@ export class BattleScene extends Phaser.Scene {
 
     //creates up down left right and shift keys automatically
     this.#cursorKeys = this.input.keyboard.createCursorKeys();
-    playerHealthBar.setMeterPercentageAnimated(0.5,{
+    playerHealthBar.setMeterPercentageAnimated(0.5, {
       duration: 3000,
-      callback: ()=> console.log('animation completed')
-    })
+      callback: () => console.log("animation completed"),
+    });
   }
 
   update() {
@@ -178,5 +196,4 @@ export class BattleScene extends Phaser.Scene {
       this.#battleMenu.handlePlayerInput(selectedDirection);
     }
   }
-
 }
