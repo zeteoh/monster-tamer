@@ -177,7 +177,7 @@ export class BattleScene extends Phaser.Scene {
       ],
       () => {
         this.time.delayedCall(500, () => {
-          this.#activeEnemyMonster.takeDamage(20, () => {
+          this.#activeEnemyMonster.takeDamage(this.#activePlayerMonster.baseAttack, () => {
             this.#enemyAttack();
           });
         });
@@ -186,6 +186,10 @@ export class BattleScene extends Phaser.Scene {
   }
 
   #enemyAttack() {
+    if(this.#activeEnemyMonster.isFainted){
+      this.#postBattleSequenceCheck();
+      return
+    }
     this.#battleMenu.updateInfoPaneMessagesAndWaitForInput(
       [
         `for ${this.#activeEnemyMonster.name} used ${
@@ -194,11 +198,50 @@ export class BattleScene extends Phaser.Scene {
       ],
       () => {
         this.time.delayedCall(500, () => {
-          this.#activePlayerMonster.takeDamage(20, () => {
-            this.#battleMenu.showMainBattleMenu();
+          this.#activePlayerMonster.takeDamage(this.#activeEnemyMonster.baseAttack, () => {
+            this.#postBattleSequenceCheck();
           });
         });
       }
+    );
+  }
+
+  #postBattleSequenceCheck() {
+    if (this.#activeEnemyMonster.isFainted) {
+      this.#battleMenu.updateInfoPaneMessagesAndWaitForInput(
+        [
+          `Wild ${this.#activeEnemyMonster.name} fainted`,
+          "You have gained some experience",
+        ],
+        () => {
+          this.#transitiontoNextScene()
+        }
+      );
+      return
+    }
+
+    if (this.#activePlayerMonster.isFainted) {
+      this.#battleMenu.updateInfoPaneMessagesAndWaitForInput(
+        [
+          ` ${this.#activePlayerMonster.name} fainted`,
+          "You have no more monsters, escaping to safety...",
+        ],
+        () => {
+          this.#transitiontoNextScene()
+        }
+      );
+      return
+    }
+    this.#battleMenu.showMainBattleMenu();
+  }
+
+  #transitiontoNextScene() {
+    // 0,0,0 fades to black
+    this.cameras.main.fadeOut(600, 0, 0, 0);
+    this.cameras.main.once(
+      Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE,
+      //this.scene.start shuts down the current scene and starts a scene that we provide
+      () => this.scene.start(SCENE_KEYS.BATTLE_SCENE)
     );
   }
 }
