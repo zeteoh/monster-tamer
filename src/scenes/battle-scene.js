@@ -122,12 +122,34 @@ export class BattleScene extends Phaser.Scene {
 
   update() {
     //added here for constant updates
-    this.#battleStateMachine.update()
+    this.#battleStateMachine.update();
     //will only return true one time when the space key is pressed and wont register true when held
     const wasSpaceKeyPressed = Phaser.Input.Keyboard.JustDown(
       this.#cursorKeys.space
     );
+    // limit input based on the current battle state we are in
+    // if we are not in the right battle state, return early and do not
+    // process any input
+    if (
+      wasSpaceKeyPressed &&
+      (this.#battleStateMachine.currentStateName ===
+        BATTLE_STATES.PRE_BATTLE_INFO ||
+        this.#battleStateMachine.currentStateName ===
+          BATTLE_STATES.POST_ATTACK_CHECK_STATE ||
+        this.#battleStateMachine.currentStateName ===
+          BATTLE_STATES.FLEE_ATTEMPT)
+    ) {
+      this.#battleMenu.handlePlayerInput("OK");
+      return;
+    }
     console.log(this.#cursorKeys.space.isDown);
+
+    // return early if we are not in player input
+    if (
+      this.#battleStateMachine.currentStateName !== BATTLE_STATES.PLAYER_INPUT
+    )
+      return;
+
     if (wasSpaceKeyPressed) {
       this.#battleMenu.handlePlayerInput("OK");
 
@@ -179,14 +201,12 @@ export class BattleScene extends Phaser.Scene {
   }
 
   #playerAttack() {
-    this.#battleMenu.updateInfoPaneMessagesAndWaitForInput(
-      [
-        `${this.#activePlayerMonster.name} used ${
-          this.#activePlayerMonster.attacks[this.#activePlayerAttackIndex].name
-        }`,
-      ],
+    this.#battleMenu.updateInfoPaneMessageNoInputRequired(
+      `${this.#activePlayerMonster.name} used ${
+        this.#activePlayerMonster.attacks[this.#activePlayerAttackIndex].name
+      }`,
       () => {
-        this.time.delayedCall(500, () => {
+        this.time.delayedCall(1200, () => {
           this.#activeEnemyMonster.takeDamage(
             this.#activePlayerMonster.baseAttack,
             () => {
@@ -200,21 +220,21 @@ export class BattleScene extends Phaser.Scene {
 
   #enemyAttack() {
     if (this.#activeEnemyMonster.isFainted) {
-      this.#battleStateMachine.setState(BATTLE_STATES.POST_ATTACK_CHECK_STATE)
+      this.#battleStateMachine.setState(BATTLE_STATES.POST_ATTACK_CHECK_STATE);
       return;
     }
-    this.#battleMenu.updateInfoPaneMessagesAndWaitForInput(
-      [
-        `for ${this.#activeEnemyMonster.name} used ${
-          this.#activeEnemyMonster.attacks[0].name
-        }`,
-      ],
+    this.#battleMenu.updateInfoPaneMessageNoInputRequired(
+      `for ${this.#activeEnemyMonster.name} used ${
+        this.#activeEnemyMonster.attacks[0].name
+      }`,
       () => {
-        this.time.delayedCall(500, () => {
+        this.time.delayedCall(1200, () => {
           this.#activePlayerMonster.takeDamage(
             this.#activeEnemyMonster.baseAttack,
             () => {
-              this.#battleStateMachine.setState(BATTLE_STATES.POST_ATTACK_CHECK_STATE)
+              this.#battleStateMachine.setState(
+                BATTLE_STATES.POST_ATTACK_CHECK_STATE
+              );
             }
           );
         });
@@ -230,7 +250,7 @@ export class BattleScene extends Phaser.Scene {
           "You have gained some experience",
         ],
         () => {
-          this.#battleStateMachine.setState(BATTLE_STATES.FINISHED)
+          this.#battleStateMachine.setState(BATTLE_STATES.FINISHED);
         }
       );
       return;
@@ -243,12 +263,12 @@ export class BattleScene extends Phaser.Scene {
           "You have no more monsters, escaping to safety...",
         ],
         () => {
-          this.#battleStateMachine.setState(BATTLE_STATES.FINISHED)
+          this.#battleStateMachine.setState(BATTLE_STATES.FINISHED);
         }
       );
       return;
     }
-    this.#battleStateMachine.setState(BATTLE_STATES.PLAYER_INPUT)
+    this.#battleStateMachine.setState(BATTLE_STATES.PLAYER_INPUT);
   }
 
   #transitiontoNextScene() {
@@ -267,7 +287,7 @@ export class BattleScene extends Phaser.Scene {
       name: BATTLE_STATES.INTRO,
       onEnter: () => {
         //wait for any scene setup and transitions to complete
-        this.time.delayedCall(500, () => {
+        this.time.delayedCall(1200, () => {
           this.#battleStateMachine.setState(BATTLE_STATES.PRE_BATTLE_INFO);
         });
       },
@@ -282,7 +302,7 @@ export class BattleScene extends Phaser.Scene {
           () => {
             // wait for text animation to complete and move to
             // next state
-            this.time.delayedCall(500, () => {
+            this.time.delayedCall(1200, () => {
               this.#battleStateMachine.setState(
                 BATTLE_STATES.BRING_OUT_MONSTER
               );
@@ -296,8 +316,8 @@ export class BattleScene extends Phaser.Scene {
       onEnter: () => {
         // wait for player monster to appear on the screen and
         // notify the player about the monster
-        this.#battleMenu.updateInfoPaneMessagesAndWaitForInput(
-          [`go ${this.#activePlayerMonster.name}!`],
+        this.#battleMenu.updateInfoPaneMessageNoInputRequired(
+          `go ${this.#activePlayerMonster.name}!`,
           () => {
             this.time.delayedCall(500, () => {
               this.#battleStateMachine.setState(BATTLE_STATES.PLAYER_INPUT);
@@ -337,23 +357,24 @@ export class BattleScene extends Phaser.Scene {
     this.#battleStateMachine.addState({
       name: BATTLE_STATES.POST_ATTACK_CHECK_STATE,
       onEnter: () => {
-        this.#postBattleSequenceCheck()
+        this.#postBattleSequenceCheck();
       },
     });
     this.#battleStateMachine.addState({
       name: BATTLE_STATES.FINISHED,
       onEnter: () => {
-        this.#transitiontoNextScene()
+        this.#transitiontoNextScene();
       },
     });
     this.#battleStateMachine.addState({
       name: BATTLE_STATES.FLEE_ATTEMPT,
       onEnter: () => {
-        this.#battleMenu.updateInfoPaneMessagesAndWaitForInput([
-          `You got away safely!`
-        ], () => {
-          this.#battleStateMachine.setState(BATTLE_STATES.FINISHED)
-        })
+        this.#battleMenu.updateInfoPaneMessagesAndWaitForInput(
+          [`You got away safely!`],
+          () => {
+            this.#battleStateMachine.setState(BATTLE_STATES.FINISHED);
+          }
+        );
       },
     });
     // start the state machine

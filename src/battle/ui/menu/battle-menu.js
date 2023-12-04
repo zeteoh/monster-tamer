@@ -23,6 +23,10 @@ const ATTACK_MENU_CURSOR_POS = Object.freeze({
   y: 38,
 });
 
+const PLAYER_INPUT_CURSOR_POS = Object.freeze({
+  y: 488,
+});
+
 export class BattleMenu {
   /**
    *@type {Phaser.Scene} doing this gives the scene the Phaser.scene functions with vscode intellisense
@@ -85,6 +89,14 @@ export class BattleMenu {
    */
   #activePlayerMonster;
   /**
+   *@type {Phaser.GameObjects.Image}
+   */
+  #userInputCursorePhaserImageGameObject;
+  /**
+   *@type {Phaser.Tweens.Tween}
+   */
+  #userInputCursorPhaserTween;
+  /**
    *
    * @param {Phaser.Scene} scene the Phaser 3 scene the battle menu will be added to
    * @param {BattleMonster} activePlayerMonster
@@ -102,6 +114,7 @@ export class BattleMenu {
     this.#createMainInfoPane();
     this.#createMainBattleMenu();
     this.#createMonsterAttackSubMenu();
+    this.#createPlayerInputCursor();
   }
   /**
    *@type {number | undefined}
@@ -141,8 +154,22 @@ export class BattleMenu {
   }
 
   hideMonsterAtackSubMenu() {
-  this.#activeBattleMenu = ACTIVE_BATTLE_MENU.BATTLE_MAIN
+    this.#activeBattleMenu = ACTIVE_BATTLE_MENU.BATTLE_MAIN;
     this.#moveSelectionSubBattleMenuPhaserContainerGameObject.setAlpha(0);
+  }
+
+  playInputCursorAnimation(){
+    this.#userInputCursorePhaserImageGameObject.setPosition(
+      this.#battleTextGameObjectLine1.displayWidth + this.#userInputCursorePhaserImageGameObject.displayWidth * 2.7,
+      this.#userInputCursorePhaserImageGameObject.y
+    )
+    this.#userInputCursorePhaserImageGameObject.setAlpha(1)
+    this.#userInputCursorPhaserTween.restart()
+  }
+
+  hideInputCursor(){
+    this.#userInputCursorePhaserImageGameObject.setAlpha(0)
+    this.#userInputCursorPhaserTween.pause()
   }
 
   /**
@@ -179,6 +206,22 @@ export class BattleMenu {
 
   /**
    *
+   * @param {string} message
+   * @param {()=>void} [callback]
+   */
+  updateInfoPaneMessageNoInputRequired(message, callback) {
+    this.#battleTextGameObjectLine1.setText("").setAlpha(1);
+
+    // TODO: animate message
+    this.#battleTextGameObjectLine1.setText(message);
+    this.#waitingForPlayerInput = false;
+    if (callback) {
+      callback();
+    }
+  }
+
+  /**
+   *
    * @param {string[]} messages
    * @param {()=>void} [callback]
    */
@@ -192,6 +235,7 @@ export class BattleMenu {
   #updateInfoPaneWithMessage() {
     this.#waitingForPlayerInput = false;
     this.#battleTextGameObjectLine1.setText("").setAlpha(1);
+    this.hideInputCursor()
 
     //check if all messages have been displayed from the queue and call the callback
     if (this.#queuedInfoPanelMessages.length === 0) {
@@ -207,6 +251,8 @@ export class BattleMenu {
     const messageToDisplay = this.#queuedInfoPanelMessages.shift();
     this.#battleTextGameObjectLine1.setText(messageToDisplay);
     this.#waitingForPlayerInput = true;
+
+    this.playInputCursorAnimation()
   }
 
   #createMainBattleMenu() {
@@ -555,6 +601,9 @@ export class BattleMenu {
   }
 
   #switchToMainBattleMenu() {
+    // hide the cursor wehn switching to main battle menu
+    this.#waitingForPlayerInput = false
+    this.hideInputCursor()
     this.hideMonsterAtackSubMenu();
     this.showMainBattleMenu();
   }
@@ -621,5 +670,32 @@ export class BattleMenu {
     }
 
     this.#selectedAttackIndex = selectedMoveIndex;
+  }
+
+  #createPlayerInputCursor() {
+    this.#userInputCursorePhaserImageGameObject = this.#scene.add.image(
+      0,
+      0,
+      UI_ASSET_KEYS.CURSOR
+    );
+    this.#userInputCursorePhaserImageGameObject
+      .setAngle(90)
+      .setScale(2.5, 1.25);
+    this.#userInputCursorePhaserImageGameObject.setAlpha(0)
+
+    this.#userInputCursorPhaserTween = this.#scene.add.tween({
+      delay: 0,
+      duration: 500,
+      //play at a repeat unless we manually stop it
+      repeat: -1,
+      y: {
+        from: PLAYER_INPUT_CURSOR_POS.y,
+        start: PLAYER_INPUT_CURSOR_POS.y,
+        to: PLAYER_INPUT_CURSOR_POS.y + 6
+      },
+      targets: this.#userInputCursorePhaserImageGameObject
+    })
+    // pause it when the game object is hidden
+    this.#userInputCursorPhaserTween.pause()
   }
 }
