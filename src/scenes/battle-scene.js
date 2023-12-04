@@ -6,6 +6,7 @@ import { HealthBar } from "../battle/ui/health-bar.js";
 import { BattleMenu } from "../battle/ui/menu/battle-menu.js";
 import { DIRECTION } from "../common/direction.js";
 import Phaser from "../lib/phaser.js";
+import { StateMachine } from "../utils/state-machine.js";
 import { SCENE_KEYS } from "./scene-keys.js";
 
 export class BattleScene extends Phaser.Scene {
@@ -29,6 +30,10 @@ export class BattleScene extends Phaser.Scene {
    * @type {number}
    */
   #activePlayerAttackIndex;
+  /**
+   * @type {StateMachine}
+   */
+  #battleStateMachine;
   constructor() {
     super({
       key: SCENE_KEYS.BATTLE_SCENE,
@@ -92,6 +97,19 @@ export class BattleScene extends Phaser.Scene {
     this.#battleMenu = new BattleMenu(this, this.#activePlayerMonster);
     this.#battleMenu.showMainBattleMenu();
 
+    this.#battleStateMachine = new StateMachine("battle", this);
+    this.#battleStateMachine.addState({
+      name: "INTRO",
+      onEnter: () => {
+        this.time.delayedCall(1000, () => {
+          this.#battleStateMachine.setState("BATTLE");
+        });
+      },
+    });
+    this.#battleStateMachine.addState({
+      name: "BATTLE",
+    });
+    this.#battleStateMachine.setState('INTRO')
     //creates up down left right and shift keys automatically
     this.#cursorKeys = this.input.keyboard.createCursorKeys();
 
@@ -177,18 +195,21 @@ export class BattleScene extends Phaser.Scene {
       ],
       () => {
         this.time.delayedCall(500, () => {
-          this.#activeEnemyMonster.takeDamage(this.#activePlayerMonster.baseAttack, () => {
-            this.#enemyAttack();
-          });
+          this.#activeEnemyMonster.takeDamage(
+            this.#activePlayerMonster.baseAttack,
+            () => {
+              this.#enemyAttack();
+            }
+          );
         });
       }
     );
   }
 
   #enemyAttack() {
-    if(this.#activeEnemyMonster.isFainted){
+    if (this.#activeEnemyMonster.isFainted) {
       this.#postBattleSequenceCheck();
-      return
+      return;
     }
     this.#battleMenu.updateInfoPaneMessagesAndWaitForInput(
       [
@@ -198,9 +219,12 @@ export class BattleScene extends Phaser.Scene {
       ],
       () => {
         this.time.delayedCall(500, () => {
-          this.#activePlayerMonster.takeDamage(this.#activeEnemyMonster.baseAttack, () => {
-            this.#postBattleSequenceCheck();
-          });
+          this.#activePlayerMonster.takeDamage(
+            this.#activeEnemyMonster.baseAttack,
+            () => {
+              this.#postBattleSequenceCheck();
+            }
+          );
         });
       }
     );
@@ -214,10 +238,10 @@ export class BattleScene extends Phaser.Scene {
           "You have gained some experience",
         ],
         () => {
-          this.#transitiontoNextScene()
+          this.#transitiontoNextScene();
         }
       );
-      return
+      return;
     }
 
     if (this.#activePlayerMonster.isFainted) {
@@ -227,10 +251,10 @@ export class BattleScene extends Phaser.Scene {
           "You have no more monsters, escaping to safety...",
         ],
         () => {
-          this.#transitiontoNextScene()
+          this.#transitiontoNextScene();
         }
       );
-      return
+      return;
     }
     this.#battleMenu.showMainBattleMenu();
   }
