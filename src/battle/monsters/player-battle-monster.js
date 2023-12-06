@@ -1,3 +1,4 @@
+import { KENNEY_FUTURE_NARROW_FONT_NAME } from "../../assets/font-keys.js";
 import { BattleMonster } from "./battle-monster.js";
 /**
  * @type {import("../../types/typedef").Coordinate}
@@ -35,6 +36,7 @@ export class PlayerBattleMonster extends BattleMonster {
         80,
         "",
         {
+          fontFamily: KENNEY_FUTURE_NARROW_FONT_NAME,
           color: "#7E3D3F",
           fontSize: "16px",
         }
@@ -74,7 +76,7 @@ export class PlayerBattleMonster extends BattleMonster {
       callback()
       return
     }
-    
+
     this._scene.tweens.add({
       delay: 0,
       duration: 800,

@@ -8,6 +8,8 @@ import {
 } from "../assets/asset-key.js";
 import Phaser from "../lib/phaser.js";
 import { SCENE_KEYS } from "./scene-keys.js";
+import * as WebFontLoader from "../lib/webfontloader.js";
+import { KENNEY_FUTURE_NARROW_FONT_NAME } from "../assets/font-keys.js";
 
 export class PreloadScene extends Phaser.Scene {
   constructor() {
@@ -89,10 +91,7 @@ export class PreloadScene extends Phaser.Scene {
       `${monsterTamerAssetPath}/ui/cursor.png`
     );
     //loading json data
-    this.load.json(
-      DATA_ASSET_KEYS.ATTACKS,
-      'assets/data/attacks.json'
-    )
+    this.load.json(DATA_ASSET_KEYS.ATTACKS, "assets/data/attacks.json");
   }
 
   create() {
@@ -105,9 +104,20 @@ export class PreloadScene extends Phaser.Scene {
      * @argumentTwo - y position of the image where a positive y value signifies position downwards
      * @setOrigin - setting 0 means that the object is placed in the middle. TLDR, it holds the middle point of the image
      */
-    this.add.image(0, 0, BATTLE_BACKGROUND_ASSET_KEYS.FOREST).setOrigin(0);
+    // this.add.image(0, 0, BATTLE_BACKGROUND_ASSET_KEYS.FOREST).setOrigin(0);
     console.log(`[${PreloadScene.name}:create] invoked`);
-    //tells phaser to load the battle scene right after it loads the preload scene
-    this.scene.start(SCENE_KEYS.BATTLE_SCENE);
+
+    //web font loader
+    WebFontLoader.default.load({
+      custom: {
+        families: [KENNEY_FUTURE_NARROW_FONT_NAME],
+      },
+      // will be invoked when families are loaded
+      active: () => {
+        console.log("font ready");
+        //tells phaser to load the battle scene right after it loads the preload scene
+        this.scene.start(SCENE_KEYS.BATTLE_SCENE);
+      },
+    });
   }
 }

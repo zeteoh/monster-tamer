@@ -1,23 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Project Template</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Monster Tamer</title>
     <style>
-        html, body, .container{
-            margin: 0px;
-            height: 100vh;
-            width: 100vh;
-            overflow: hidden;
-            background-color: #d7d7d7;
-        }
+      html,
+      body,
+      .container {
+        margin: 0px;
+        height: 100vh;
+        width: 100vh;
+        overflow: hidden;
+        background-color: #d7d7d7;
+      }
+
+      @font-face {
+        font-family: Kenny-Future-Narrow;
+        src: url("assets/fonts/kenneys-fonts/Kenney-Future-Narrow.ttf")
+          format("truetype");
+      }
     </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js"></script>
     <script src="//cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container" id="game-container">
-    <script src="src/main.js" type="module"></script>
+      <script src="src/main.js" type="module"></script>
     </div>
-</body>
+  </body>
 </html>
