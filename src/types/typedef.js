@@ -1,10 +1,11 @@
-import Phaser from '../lib/phaser.js'
+import Phaser from "../lib/phaser.js";
 /**
  * @typedef BattleMonsterConfig
  * @type {Object}
  * @property {Phaser.Scene} scene
  * @property {Monster} monsterDetails
  * @property {number} [scaleHealthBarBackgroundImageByY=1]
+ * @property {boolean} [skipBattleAnimations=false] used to skip all animations to tied to the monster during battle
  */
 
 /**

@@ -35,6 +35,10 @@ export class BattleMonster {
    */
   _phaserHealthBarGameContainer;
   /**
+   * @protected @type {boolean}
+   */
+  _skipBattleAnimations;
+  /**
    *
    * @param {import("../../types/typedef.js").BattleMonsterConfig} config
    * @param {import("../../types/typedef.js").Coordinate} position
@@ -45,6 +49,7 @@ export class BattleMonster {
     this._currentHealth = this._monsterDetails.currentHp;
     this._maxHealth = this._monsterDetails.maxHp;
     this._monsterAttacks = [];
+    this._skipBattleAnimations = config.skipBattleAnimations || false;
 
     this._phaserGameObject = this._scene.add
       .image(
@@ -135,6 +140,12 @@ export class BattleMonster {
    * @returns {void}
    */
   playTakeDamageAnimation(callback) {
+
+    if(this._skipBattleAnimations){
+      this._phaserGameObject.setAlpha(1)
+      callback()
+      return
+    }
     this._scene.tweens.add({
       delay: 0,
       duration: 150,
