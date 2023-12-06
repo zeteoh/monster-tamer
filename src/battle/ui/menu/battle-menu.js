@@ -294,7 +294,7 @@ export class BattleMenu {
       this.playInputCursorAnimation();
       // if (this.#queuedInfoPanelCallback) {
       //   this.#queuedInfoPanelCallback();
-      //   this.#queuedInfoPanelCallback = undefined;
+      //   this.#queuedInfoPanelCallback = und  efined;
       // }
       return;
     }
