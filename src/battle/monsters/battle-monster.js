@@ -2,6 +2,7 @@ import { BATTLE_ASSET_KEYS } from "../../assets/asset-key.js";
 import { KENNEY_FUTURE_NARROW_FONT_NAME } from "../../assets/font-keys.js";
 import { DataUtils } from "../../utils/data-utils.js";
 import { HealthBar } from "../ui/health-bar.js";
+import Phaser from '../../lib/phaser.js'
 export class BattleMonster {
   /**
    * @protected @type {Phaser.Scene}

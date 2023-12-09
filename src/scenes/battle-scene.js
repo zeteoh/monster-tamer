@@ -1,4 +1,5 @@
 import { BATTLE_ASSET_KEYS, MONSTER_ASSET_KEYS } from "../assets/asset-key.js";
+import { IceShard } from "../battle/attacks/ice-shard.js";
 import { Background } from "../battle/background.js";
 import { EnemyBattleMonster } from "../battle/monsters/enemy-battle-monsters.js";
 import { PlayerBattleMonster } from "../battle/monsters/player-battle-monster.js";
@@ -117,6 +118,7 @@ export class BattleScene extends Phaser.Scene {
     //creates up down left right and shift keys automatically
     this.#cursorKeys = this.input.keyboard.createCursorKeys();
 
+    const attack = new IceShard(this, {x: 745, y: 140})
     // this.#activeEnemyMonster.takeDamage(20, () => {
     //   this.#activePlayerMonster.takeDamage(15);
     // });

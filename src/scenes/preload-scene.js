@@ -1,5 +1,6 @@
 import Phaser from "../lib/phaser.js";
 import {
+  ATTACK_ASSET_KEYS,
   BATTLE_ASSET_KEYS,
   BATTLE_BACKGROUND_ASSET_KEYS,
   DATA_ASSET_KEYS,
@@ -34,6 +35,7 @@ export class PreloadScene extends Phaser.Scene {
 
     const monsterTamerAssetPath = `${basePath}/monster-tamer`;
     const kenneysAssetPath = `${basePath}/kenneys-assets`;
+    const pimenAssetPath = `${basePath}/pimen`;
 
     //preload lifecycle and make it avalailable in cache but cannot be displayed yet
     //battle grounds
@@ -94,7 +96,39 @@ export class PreloadScene extends Phaser.Scene {
     this.load.json(DATA_ASSET_KEYS.ATTACKS, "assets/data/attacks.json");
 
     //load custom fonts
-    this.load.addFile(new WebFontFileLoader(this.load, [KENNEY_FUTURE_NARROW_FONT_NAME]))
+    this.load.addFile(
+      new WebFontFileLoader(this.load, [KENNEY_FUTURE_NARROW_FONT_NAME])
+    );
+
+    //load attack asset
+    this.load.spritesheet(
+      ATTACK_ASSET_KEYS.ICE_SHARD,
+      `${pimenAssetPath}/ice-attack/active.png`,
+      {
+        frameWidth: 32,
+        frameHeight: 32,
+      }
+    );
+
+    //load attack asset
+    this.load.spritesheet(
+      ATTACK_ASSET_KEYS.ICE_SHARD_START,
+      `${pimenAssetPath}/ice-attack/start.png`,
+      {
+        frameWidth: 32,
+        frameHeight: 32,
+      }
+    );
+
+    //load attack asset
+    this.load.spritesheet(
+      ATTACK_ASSET_KEYS.SLASH,
+      `${pimenAssetPath}/slash.png`,
+      {
+        frameWidth: 48,
+        frameHeight: 48,
+      }
+    );
   }
 
   create() {
