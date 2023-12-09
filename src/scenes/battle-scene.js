@@ -119,6 +119,7 @@ export class BattleScene extends Phaser.Scene {
     this.#cursorKeys = this.input.keyboard.createCursorKeys();
 
     const attack = new IceShard(this, {x: 745, y: 140})
+    attack.playAnimation()
     // this.#activeEnemyMonster.takeDamage(20, () => {
     //   this.#activePlayerMonster.takeDamage(15);
     // });

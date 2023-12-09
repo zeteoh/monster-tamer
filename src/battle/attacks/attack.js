@@ -36,7 +36,7 @@ export class Attack {
 
   /**
    * 
-   * @param {()=> void} callback 
+   * @param {()=> void} [callback] 
    * @returns {void}
    */
   playAnimation(callback){
