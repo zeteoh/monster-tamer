@@ -1,9 +1,11 @@
-import { BATTLE_ASSET_KEYS, MONSTER_ASSET_KEYS } from "../assets/asset-key.js";
-import { IceShard } from "../battle/attacks/ice-shard.js";
+import { MONSTER_ASSET_KEYS } from "../assets/asset-key.js";
+import {
+  ATTACK_TARGET,
+  AttackManager,
+} from "../battle/attacks/attack-manager.js";
 import { Background } from "../battle/background.js";
 import { EnemyBattleMonster } from "../battle/monsters/enemy-battle-monsters.js";
 import { PlayerBattleMonster } from "../battle/monsters/player-battle-monster.js";
-import { HealthBar } from "../battle/ui/health-bar.js";
 import { BattleMenu } from "../battle/ui/menu/battle-menu.js";
 import { DIRECTION } from "../common/direction.js";
 import { SKIP_BATTLE_ANIMATIONS } from "../config.js";
@@ -51,6 +53,10 @@ export class BattleScene extends Phaser.Scene {
    * @type {StateMachine}
    */
   #battleStateMachine;
+  /**
+   * @type {AttackManager}
+   */
+  #attackManager;
   constructor() {
     super({
       key: SCENE_KEYS.BATTLE_SCENE,
@@ -91,7 +97,7 @@ export class BattleScene extends Phaser.Scene {
         attackIds: [1],
         currentLevel: 5,
       },
-      skipBattleAnimations: SKIP_BATTLE_ANIMATIONS
+      skipBattleAnimations: SKIP_BATTLE_ANIMATIONS,
     });
     this.#activePlayerMonster = new PlayerBattleMonster({
       scene: this,
@@ -105,7 +111,7 @@ export class BattleScene extends Phaser.Scene {
         attackIds: [2],
         currentLevel: 5,
       },
-      skipBattleAnimations: SKIP_BATTLE_ANIMATIONS
+      skipBattleAnimations: SKIP_BATTLE_ANIMATIONS,
     });
     /**
      * using a container, we can move all assets in the container together and package them in a container
@@ -115,11 +121,9 @@ export class BattleScene extends Phaser.Scene {
     // render outy main info and sub info panes
     this.#battleMenu = new BattleMenu(this, this.#activePlayerMonster);
     this.#createBattleStateMachine();
+    this.#attackManager = new AttackManager(this, SKIP_BATTLE_ANIMATIONS);
     //creates up down left right and shift keys automatically
     this.#cursorKeys = this.input.keyboard.createCursorKeys();
-
-    const attack = new IceShard(this, {x: 745, y: 140})
-    attack.playAnimation()
     // this.#activeEnemyMonster.takeDamage(20, () => {
     //   this.#activePlayerMonster.takeDamage(15);
     // });
@@ -213,14 +217,21 @@ export class BattleScene extends Phaser.Scene {
       }`,
       () => {
         this.time.delayedCall(500, () => {
-          this.#activeEnemyMonster.playTakeDamageAnimation(() => {
-            this.#activeEnemyMonster.takeDamage(
-              this.#activePlayerMonster.baseAttack,
-              () => {
-                this.#enemyAttack();
-              }
-            );
-          });
+          this.#attackManager.playAttackAnimation(
+            this.#activePlayerMonster.attacks[this.#activePlayerAttackIndex]
+              .animationName,
+            ATTACK_TARGET.ENEMY,
+            () => {
+              this.#activeEnemyMonster.playTakeDamageAnimation(() => {
+                this.#activeEnemyMonster.takeDamage(
+                  this.#activePlayerMonster.baseAttack,
+                  () => {
+                    this.#enemyAttack();
+                  }
+                );
+              });
+            }
+          );
         });
       },
       SKIP_BATTLE_ANIMATIONS
@@ -238,16 +249,23 @@ export class BattleScene extends Phaser.Scene {
       }`,
       () => {
         this.time.delayedCall(500, () => {
-          this.#activePlayerMonster.playTakeDamageAnimation(() => {
-            this.#activePlayerMonster.takeDamage(
-              this.#activeEnemyMonster.baseAttack,
-              () => {
-                this.#battleStateMachine.setState(
-                  BATTLE_STATES.POST_ATTACK_CHECK_STATE
+          this.#attackManager.playAttackAnimation(
+            this.#activeEnemyMonster.attacks[0]
+              .animationName,
+            ATTACK_TARGET.PLAYER,
+            () => {
+              this.#activePlayerMonster.playTakeDamageAnimation(() => {
+                this.#activePlayerMonster.takeDamage(
+                  this.#activeEnemyMonster.baseAttack,
+                  () => {
+                    this.#battleStateMachine.setState(
+                      BATTLE_STATES.POST_ATTACK_CHECK_STATE
+                    );
+                  }
                 );
-              }
-            );
-          });
+              });
+            }
+          );
         });
       },
       SKIP_BATTLE_ANIMATIONS
@@ -316,7 +334,9 @@ export class BattleScene extends Phaser.Scene {
         // wait for enemy monster to appear on the screen and
         // notify the player about the wild monster
         this.#activeEnemyMonster.playMonsterAppearAnimation(() => {
-          this.#activeEnemyMonster.playMonsterHealthBarAppearAnimation(() => undefined);
+          this.#activeEnemyMonster.playMonsterHealthBarAppearAnimation(
+            () => undefined
+          );
           this.#battleMenu.updateInfoPaneMessagesAndWaitForInput(
             [`wild ${this.#activeEnemyMonster.name} appeared!`],
             () => {
@@ -337,7 +357,9 @@ export class BattleScene extends Phaser.Scene {
         // wait for player monster to appear on the screen and
         // notify the player about the monster
         this.#activePlayerMonster.playMonsterAppearAnimation(() => {
-          this.#activePlayerMonster.playMonsterHealthBarAppearAnimation(() => undefined);
+          this.#activePlayerMonster.playMonsterHealthBarAppearAnimation(
+            () => undefined
+          );
           this.#battleMenu.updateInfoPaneMessageNoInputRequired(
             `go ${this.#activePlayerMonster.name}!`,
             () => {

@@ -142,7 +142,6 @@ export class BattleMonster {
    * @returns {void}
    */
   playTakeDamageAnimation(callback) {
-
     if(this._skipBattleAnimations){
       this._phaserGameObject.setAlpha(1)
       callback()
