@@ -3,10 +3,12 @@ import {
   ATTACK_ASSET_KEYS,
   BATTLE_ASSET_KEYS,
   BATTLE_BACKGROUND_ASSET_KEYS,
+  CHARACTER_ASSET_KEYS,
   DATA_ASSET_KEYS,
   HEALTH_BAR_ASSET_KEYS,
   MONSTER_ASSET_KEYS,
   UI_ASSET_KEYS,
+  WORLD_ASSET_KEYS,
 } from "../assets/asset-key.js";
 import { SCENE_KEYS } from "./scene-keys.js";
 import { KENNEY_FUTURE_NARROW_FONT_NAME } from "../assets/font-keys.js";
@@ -36,6 +38,8 @@ export class PreloadScene extends Phaser.Scene {
     const monsterTamerAssetPath = `${basePath}/monster-tamer`;
     const kenneysAssetPath = `${basePath}/kenneys-assets`;
     const pimenAssetPath = `${basePath}/pimen`;
+    const axulArtAssetPath = `${basePath}/axulart`;
+    const pbGamesAssetPath = `${basePath}/parabellum-games`;
 
     //preload lifecycle and make it avalailable in cache but cannot be displayed yet
     //battle grounds
@@ -129,6 +133,31 @@ export class PreloadScene extends Phaser.Scene {
         frameHeight: 48,
       }
     );
+
+    //load world assets
+    this.load.image(
+      WORLD_ASSET_KEYS.WORLD_BACKGROUND,
+      `${monsterTamerAssetPath}/map/level_background.png`
+    );
+
+    // load character images
+    this.load.spritesheet(
+      CHARACTER_ASSET_KEYS.PLAYER,
+      `${axulArtAssetPath}/character/custom.png`,
+      {
+        frameWidth: 64,
+        frameHeight: 88,
+      }
+    );
+
+    this.load.spritesheet(
+      CHARACTER_ASSET_KEYS.PLAYER,
+      `${pbGamesAssetPath}/characters.png`,
+      {
+        frameWidth: 16,
+        frameHeight: 16,
+      }
+    );
   }
 
   create() {
@@ -143,6 +172,6 @@ export class PreloadScene extends Phaser.Scene {
      */
     // this.add.image(0, 0, BATTLE_BACKGROUND_ASSET_KEYS.FOREST).setOrigin(0);
     console.log(`[${PreloadScene.name}:create] invoked`);
-    this.scene.start(SCENE_KEYS.BATTLE_SCENE);
+    this.scene.start(SCENE_KEYS.WORLD_SCENE);
   }
 }

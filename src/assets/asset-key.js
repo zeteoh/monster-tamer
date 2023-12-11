@@ -34,3 +34,12 @@ export const ATTACK_ASSET_KEYS = Object.freeze({
     ICE_SHARD_START: 'ICE_SHARD_START',
     SLASH: 'ICE_SHARD_START'
 })
+
+export const WORLD_ASSET_KEYS = Object.freeze({
+    WORLD_BACKGROUND:'WORLD_BACKGROUND',
+})
+
+export const CHARACTER_ASSET_KEYS = Object.freeze({
+    PLAYER:'PLAYER',
+    NPC: 'NPC'
+})
