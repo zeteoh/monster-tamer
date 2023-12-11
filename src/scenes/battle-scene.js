@@ -10,6 +10,7 @@ import { BattleMenu } from "../battle/ui/menu/battle-menu.js";
 import { DIRECTION } from "../common/direction.js";
 import { SKIP_BATTLE_ANIMATIONS } from "../config.js";
 import Phaser from "../lib/phaser.js";
+import { createSceneTransition } from "../utils/scene-transition.js";
 import { StateMachine } from "../utils/state-machine.js";
 import { SCENE_KEYS } from "./scene-keys.js";
 
@@ -323,9 +324,12 @@ export class BattleScene extends Phaser.Scene {
       name: BATTLE_STATES.INTRO,
       onEnter: () => {
         //wait for any scene setup and transitions to complete
-        this.time.delayedCall(1200, () => {
-          this.#battleStateMachine.setState(BATTLE_STATES.PRE_BATTLE_INFO);
-        });
+        createSceneTransition(this, {
+          skipSceneTransition: SKIP_BATTLE_ANIMATIONS,
+          callback: ()=> {
+            this.#battleStateMachine.setState(BATTLE_STATES.PRE_BATTLE_INFO);
+          }
+        })
       },
     });
     this.#battleStateMachine.addState({
