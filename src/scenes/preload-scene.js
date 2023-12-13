@@ -13,6 +13,7 @@ import {
 import { SCENE_KEYS } from "./scene-keys.js";
 import { KENNEY_FUTURE_NARROW_FONT_NAME } from "../assets/font-keys.js";
 import { WebFontFileLoader } from "../assets/web-font-file-loader.js";
+import { DataUtils } from "../utils/data-utils.js";
 
 export class PreloadScene extends Phaser.Scene {
   constructor() {
@@ -98,6 +99,7 @@ export class PreloadScene extends Phaser.Scene {
     );
     //loading json data
     this.load.json(DATA_ASSET_KEYS.ATTACKS, "assets/data/attacks.json");
+    this.load.json(DATA_ASSET_KEYS.ANIMATIONS, "assets/data/animations.json");
 
     //load custom fonts
     this.load.addFile(
@@ -163,6 +165,7 @@ export class PreloadScene extends Phaser.Scene {
   create() {
     //look for the background image in the preloader cache by referencing the key
     this.textures.get("background");
+    this.#createAnimations();
     /**
      * this.add references phaser 3 scene game factory
      * image game object is for displaying static scene which is perfect for background
@@ -173,5 +176,32 @@ export class PreloadScene extends Phaser.Scene {
     // this.add.image(0, 0, BATTLE_BACKGROUND_ASSET_KEYS.FOREST).setOrigin(0);
     console.log(`[${PreloadScene.name}:create] invoked`);
     this.scene.start(SCENE_KEYS.WORLD_SCENE);
+  }
+
+  #createAnimations() {
+    const animations = DataUtils.getAnimations(this);
+    animations.forEach((animation) => {
+      const frames = animation.frames
+        ? this.anims.generateFrameNumbers(animation.assetKey, {
+            frames: animation.frames,
+          })
+        : this.anims.generateFrameNumbers(animation.assetKey);
+      // create animations
+      /**
+       * anims create a new animation and stores in the cache so that we can play it later when we reference the sprite object
+       */
+      this.anims.create({
+        key: animation.key,
+        /**
+         * generateFrameNumber creates frames that are needed for the animation. for example, 0-5 is generated since there
+         * are only 5 frames in the sprite sheet asset
+         */
+        frames: frames,
+        frameRate: animation.frameRate,
+        repeat: animation.repeat,
+        delay: animation.delay,
+        yoyo: animation.yoyo,
+      });
+    });
   }
 }

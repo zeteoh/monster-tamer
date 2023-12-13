@@ -89,24 +89,6 @@ export class Character {
     // if the character is moving, just return early
     if (this._isMoving) return;
     this._moveSprite(direction);
-    // switch (direction) {
-    //   case DIRECTION.DOWN:
-    //     this._phaserGameObject.y += TILE_SIZE;
-    //     break;
-    //   case DIRECTION.UP:
-    //     this._phaserGameObject.y -= TILE_SIZE;
-    //     break;
-    //   case DIRECTION.LEFT:
-    //     this._phaserGameObject.x -= TILE_SIZE;
-    //     break;
-    //   case DIRECTION.RIGHT:
-    //     this._phaserGameObject.x += TILE_SIZE;
-    //     break;
-    //   case DIRECTION.NONE:
-    //     break;
-    //   default:
-    //     exhaustiveGuard(direction);
-    // }
   }
 
   /**
