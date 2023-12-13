@@ -1,14 +1,25 @@
 import { DIRECTION } from "../../common/direction.js";
 import { getTargetPositionFromGameObjectPositionAndDirection } from "../../utils/grid-utils.js";
+import { exhaustiveGuard } from "../../utils/guard.js";
+/**
+ * @typedef CharacterIdleFrameConfig
+ * @type {object}
+ * @property {number} LEFT
+ * @property {number} RIGHT
+ * @property {number} UP
+ * @property {number} DOWN
+ * @property {number} NONE
+ */
 /**
  * @typedef CharacterConfig
  * @type {object}
- * @property {Phaser.Scene} scene
- * @property {string} assetKey
- * @property {number} [assetFrame=0]
- * @property {import("../../types/typedef").Coordinate} position
- * @property {import("../../common/direction.js").Direction} direction
- * @property {()=>void} [spriteGridMovementFinishedCallback]
+ * @property {Phaser.Scene} scene Phaser 3 scene the battle menu will be added to
+ * @property {string} assetKey the name of the assset key that should be used for this character
+ * @property {import("../../types/typedef").Coordinate} [origin={x:0, y:0}]
+ * @property {import("../../types/typedef").Coordinate} position the starting position of the character
+ * @property {import("../../common/direction.js").Direction} direction the direction of the character is currently facing
+ * @property {()=>void} [spriteGridMovementFinishedCallback] an optional callback that will be called
+ * @property {CharacterIdleFrameConfig} idleFrameConfig
  */
 
 export class Character {
@@ -21,32 +32,40 @@ export class Character {
    */
   _phaserGameObject;
   /**
-   * @type {import("../../common/direction.js").Direction}
+   *@protected @type {import("../../common/direction.js").Direction}
    */
   _direction;
   /**
-   * @type {boolean} ismoving is used to check
+   *@protected @type {boolean} ismoving is used to check
    * whether the character is still moving and if the character
    * is moving, no user input can be registered until the animation
    * completes
    */
   _isMoving;
   /**
-   * @type {import("../../types/typedef").Coordinate} tracking where the player
+   *@protected @type {import("../../types/typedef").Coordinate} tracking where the player
    * is moving to. For example, if i want to press the right key,
    * will check the right position
    */
   _targetPosition;
   /**
-   * @type {import("../../types/typedef").Coordinate} used for checking if
+   *@protected @type {import("../../types/typedef").Coordinate} used for checking if
    * player moving is interrupted. used to know where they were
    * previously targetting
    */
   _previousTargetPosition;
   /**
-   * @type {() => void | undefined}
+   *@protected @type {() => void | undefined}
    */
   _spriteGridMovementFinishedCallback;
+  /**
+   *@protected @type {CharacterIdleFrameConfig}
+   */
+  _idleFrameConfig;
+  /**
+   *@protected @type {import("../../types/typedef").Coordinate}
+   */
+  _origin;
   /**
    *
    * @param {CharacterConfig} config
@@ -57,14 +76,16 @@ export class Character {
     this._isMoving = false;
     this._targetPosition = { ...config.position };
     this._previousTargetPosition = { ...config.position };
+    this._idleFrameConfig = config.idleFrameConfig;
+    this._origin = config.origin ? { ...config.origin } : { x: 0, y: 0 };
     this._phaserGameObject = this._scene.add
       .sprite(
         config.position.x,
         config.position.y,
         config.assetKey,
-        config.assetFrame || 0
+        this._getIdleFrame()
       )
-      .setOrigin(0);
+      .setOrigin(this._origin.x, this._origin.y);
     this._spriteGridMovementFinishedCallback =
       config.spriteGridMovementFinishedCallback;
   }
@@ -111,9 +132,43 @@ export class Character {
     return false;
   }
 
+  /**
+   *
+   * @param {DOMHighResTimeStamp} time time is when the last frame render was completed, used this
+   * to track such that we can move it every x seconds instead of every frame
+   * @returns {void}
+   */
+  update(time) {
+    if (this._isMoving) {
+      return;
+    }
+    console.log();
+    // middle frame in the currentanim from the json file is always the idle frame
+    const idleFrame =
+      this._phaserGameObject.anims.currentAnim?.frames[1].frame.name;
+    this._phaserGameObject.anims.stop();
+    if (!idleFrame) return;
+    switch (this._direction) {
+      case DIRECTION.DOWN:
+      case DIRECTION.LEFT:
+      case DIRECTION.RIGHT:
+      case DIRECTION.UP:
+        this._phaserGameObject.setFrame(idleFrame);
+        break;
+      case DIRECTION.NONE:
+        break;
+      default:
+        exhaustiveGuard(this._direction);
+    }
+  }
+
+  _getIdleFrame() {
+    return this._idleFrameConfig[this._direction];
+  }
+
   #handleSpriteMovement() {
     if (this._direction === DIRECTION.NONE) return;
-    
+
     const updatedPosition = getTargetPositionFromGameObjectPositionAndDirection(
       this._targetPosition,
       this._direction
@@ -139,10 +194,10 @@ export class Character {
       //affects the phaser game object
       targets: this._phaserGameObject,
       onComplete: () => {
-        this._isMoving = false
-        this._previousTargetPosition = {...this._targetPosition}
-        if(this._spriteGridMovementFinishedCallback){
-          this._spriteGridMovementFinishedCallback()
+        this._isMoving = false;
+        this._previousTargetPosition = { ...this._targetPosition };
+        if (this._spriteGridMovementFinishedCallback) {
+          this._spriteGridMovementFinishedCallback();
         }
       },
     });

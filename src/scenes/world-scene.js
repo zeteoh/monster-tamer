@@ -44,7 +44,7 @@ export class WorldScene extends Phaser.Scene {
     this.#controls = new Controls(this);
   }
 
-  update() {
+  update(time) {
     /**
      * check to see if the button is being held down, if it is,
      * move the character
@@ -53,5 +53,6 @@ export class WorldScene extends Phaser.Scene {
     if (selectedDirection !== DIRECTION.NONE) {
       this.#player.moveCharacter(selectedDirection);
     }
+    this.#player.update(time)
   }
 }

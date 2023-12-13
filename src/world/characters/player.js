@@ -4,7 +4,7 @@ import { exhaustiveGuard } from "../../utils/guard.js";
 import { Character } from "./character.js";
 
 /**
- * @typedef {Omit<import('./character').CharacterConfig, 'assetKey' | 'assetFrame'>} PlayerConfig
+ * @typedef {Omit<import('./character').CharacterConfig, 'assetKey' | 'idleFrameConfig'>} PlayerConfig
  */
 
 export class Player extends Character {
@@ -16,7 +16,14 @@ export class Player extends Character {
     super({
       ...config,
       assetKey: CHARACTER_ASSET_KEYS.PLAYER,
-      assetFrame: 7,
+      origin: { x: 0, y: 0.2 },
+      idleFrameConfig: {
+        DOWN: 7,
+        UP: 1,
+        NONE: 7,
+        LEFT: 10,
+        RIGHT: 4,
+      },
     });
   }
 
@@ -45,9 +52,9 @@ export class Player extends Character {
         }
         break;
       case DIRECTION.NONE:
-        break
+        break;
       default:
-        exhaustiveGuard(this._direction)
+        exhaustiveGuard(this._direction);
     }
   }
 }
