@@ -10,8 +10,8 @@ import { TILE_SIZE } from "../config.js";
  * @type {import("../types/typedef.js").Coordinate}
  */
 const PLAYER_POSITION = Object.freeze({
-  x: 1 * TILE_SIZE,
-  y: 1 * TILE_SIZE,
+  x: 6 * TILE_SIZE,
+  y: 21 * TILE_SIZE,
 });
 
 export class WorldScene extends Phaser.Scene {
@@ -32,6 +32,14 @@ export class WorldScene extends Phaser.Scene {
 
   create() {
     console.log(`[${WorldScene.name}:preload] invoked`);
+    const x = 6 * TILE_SIZE;
+    const y = 22 * TILE_SIZE;
+    // set boundaries so that it wont go out of the map, allows us
+    // to provide the top left coordinate of the bounding box
+    // 3rd and 4th parameter is the width and height of the bounding box
+    this.cameras.main.setBounds(0, 0, 1280, 2176);
+    this.cameras.main.setZoom(0.8);
+    this.cameras.main.centerOn(x, y);
 
     // 0,0 for top left hand corner
     this.add.image(0, 0, WORLD_ASSET_KEYS.WORLD_BACKGROUND, 0).setOrigin(0);
@@ -39,9 +47,12 @@ export class WorldScene extends Phaser.Scene {
       scene: this,
       position: PLAYER_POSITION,
       direction: DIRECTION.DOWN,
-      
     });
+    // camera should move to follow player
+    this.cameras.main.startFollow(this.#player.sprite);
     this.#controls = new Controls(this);
+
+    this.cameras.main.fadeIn(1000, 0, 0, 0);
   }
 
   update(time) {
@@ -53,6 +64,6 @@ export class WorldScene extends Phaser.Scene {
     if (selectedDirection !== DIRECTION.NONE) {
       this.#player.moveCharacter(selectedDirection);
     }
-    this.#player.update(time)
+    this.#player.update(time);
   }
 }

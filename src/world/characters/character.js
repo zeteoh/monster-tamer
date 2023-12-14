@@ -89,6 +89,13 @@ export class Character {
     this._spriteGridMovementFinishedCallback =
       config.spriteGridMovementFinishedCallback;
   }
+
+  /**
+   * @type {Phaser.GameObjects.Sprite}
+   */
+  get sprite() {
+    return this._phaserGameObject;
+  }
   /**
    * @type {boolean}
    */
