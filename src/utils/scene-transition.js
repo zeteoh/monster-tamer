@@ -61,5 +61,4 @@ export function createSceneTransition(scene, options) {
             }
         }
     })
-    options.callback()
 }

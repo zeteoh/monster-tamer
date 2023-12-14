@@ -18,32 +18,6 @@ export class IceShard extends Attack {
     /**
      * anims create a new animation and stores in the cache so that we can play it later when we reference the sprite object
      */
-    this._scene.anims.create({
-      key: ATTACK_ASSET_KEYS.ICE_SHARD,
-      /**
-       * generateFrameNumber creates frames that are needed for the animation. for example, 0-5 is generated since there
-       * are only 5 frames in the sprite sheet asset
-       */
-      frames: this._scene.anims.generateFrameNumbers(
-        ATTACK_ASSET_KEYS.ICE_SHARD
-      ),
-      frameRate: 8,
-      repeat: 0,
-      delay: 0,
-    });
-    this._scene.anims.create({
-      key: ATTACK_ASSET_KEYS.ICE_SHARD_START,
-      /**
-       * generateFrameNumber creates frames that are needed for the animation. for example, 0-5 is generated since there
-       * are only 5 frames in the sprite sheet asset
-       */
-      frames: this._scene.anims.generateFrameNumbers(
-        ATTACK_ASSET_KEYS.ICE_SHARD_START
-      ),
-      frameRate: 8,
-      repeat: 0,
-      delay: 0,
-    });
     // create game objects
     /**
      * sprite sheet we can state which texture we can use from the sprite sheet, if we dont specify it will be 0 ( we specified 5)
