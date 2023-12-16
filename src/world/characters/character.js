@@ -20,6 +20,7 @@ import { exhaustiveGuard } from "../../utils/guard.js";
  * @property {import("../../common/direction.js").Direction} direction the direction of the character is currently facing
  * @property {()=>void} [spriteGridMovementFinishedCallback] an optional callback that will be called
  * @property {CharacterIdleFrameConfig} idleFrameConfig
+ * @property {Phaser.Tilemaps.TilemapLayer} [collisionLayer]
  */
 
 export class Character {
@@ -67,6 +68,10 @@ export class Character {
    */
   _origin;
   /**
+   *@protected @type {Phaser.Tilemaps.TilemapLayer | undefined}
+   */
+  _collisionLayer;
+  /**
    *
    * @param {CharacterConfig} config
    */
@@ -78,6 +83,7 @@ export class Character {
     this._previousTargetPosition = { ...config.position };
     this._idleFrameConfig = config.idleFrameConfig;
     this._origin = config.origin ? { ...config.origin } : { x: 0, y: 0 };
+    this._collisionLayer = config.collisionLayer;
     this._phaserGameObject = this._scene.add
       .sprite(
         config.position.x,
@@ -135,8 +141,19 @@ export class Character {
   _isBlockingTile() {
     if (this._direction === DIRECTION.NONE) return;
 
-    // TODO: add in collision logic
-    return false;
+    /**
+     * grab the tile that the character is facing, basically checking the
+     * tile in the front. if the tile is blocking, it is a collision tile
+     */
+    const targetPosition = {
+      ...this._targetPosition,
+    };
+    const updatedPosition = getTargetPositionFromGameObjectPositionAndDirection(
+      targetPosition,
+      this._direction
+    );
+
+    return this.#doesPositionCollideWithCollisionLayer(updatedPosition);
   }
 
   /**
@@ -208,5 +225,26 @@ export class Character {
         }
       },
     });
+  }
+
+  /**
+   * 
+   * @param {import("../../types/typedef").Coordinate} position 
+   * @returns {boolean}
+   */
+  #doesPositionCollideWithCollisionLayer(position) {
+    if (!this._collisionLayer) {
+      return false;
+    }
+
+    const { x, y } = position;
+    /**
+     * the method below allows us to provide an x and y coordinate in our phaser scene
+     * and it will return a tile if one exist at that position. If it doesnt exist
+     * return null, passing true means that it will always return a pahser tile
+     * will return -1 if it doesnt exist
+     */
+    const tile = this._collisionLayer.getTileAtWorldXY(x,y, true)
+    return tile.index !== -1
   }
 }
