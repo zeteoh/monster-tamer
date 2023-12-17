@@ -299,7 +299,7 @@ export class BattleScene extends Phaser.Scene {
     this.cameras.main.once(
       Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE,
       //this.scene.start shuts down the current scene and starts a scene that we provide
-      () => this.scene.start(SCENE_KEYS.BATTLE_SCENE)
+      () => this.scene.start(SCENE_KEYS.WORLD_SCENE)
     );
   }
 

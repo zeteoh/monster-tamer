@@ -153,6 +153,10 @@ export class PreloadScene extends Phaser.Scene {
       WORLD_ASSET_KEYS.WORLD_FOREGROUND,
       `${monsterTamerAssetPath}/map/level_foreground.png`
     );
+    this.load.image(
+      WORLD_ASSET_KEYS.WORLD_ENCOUNTER_ZONE,
+      `${monsterTamerAssetPath}/map/encounter.png`
+    );
 
     // load character images
     this.load.spritesheet(

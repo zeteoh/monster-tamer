@@ -42,6 +42,12 @@ export class Controls {
     return Phaser.Input.Keyboard.JustDown(this.#cursorKeys.shift);
   }
 
+  /**
+   * check if player is HOLDING the key down, if they are, allow player
+   * to keep moving continuously, as opposed to  getDirectionKeyJustPressed()
+   * function where player moves in a single tile
+   * @returns {import("../common/direction.js").Direction}
+   */
   getDirectionKeyPressedDown() {
     if (this.#cursorKeys === undefined) return DIRECTION.NONE;
     /**
@@ -64,7 +70,7 @@ export class Controls {
    * check if the key is pressed just once so that it only
    * processes ONCE and not multiple times. If key is processed
    * multiple times, character on screen will teleport lol
-   * @returns 
+   * @returns {import("../common/direction.js").Direction}
    */
   getDirectionKeyJustPressed() {
     if (this.#cursorKeys === undefined) return DIRECTION.NONE;

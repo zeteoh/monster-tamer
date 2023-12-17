@@ -23,11 +23,23 @@ export class WorldScene extends Phaser.Scene {
    * @type {Controls}
    */
   #controls;
+  /**
+   * @type {Phaser.Tilemaps.TilemapLayer}
+   */
+  #encounterLayer;
+  /**
+   * @type {boolean}
+   */
+  #wildMonsterEncountered;
   constructor() {
     super({
       key: SCENE_KEYS.WORLD_SCENE,
       //adding active: true can tell the phaser manager to start the scene without being called from the main.js
     });
+  }
+
+  init() {
+    this.#wildMonsterEncountered = false;
   }
 
   create() {
@@ -50,12 +62,15 @@ export class WorldScene extends Phaser.Scene {
       key: WORLD_ASSET_KEYS.WORLD_MAIN_LEVEL,
     });
     // provide name of the tileset that is needed to match the tileset that is used in level.json file
-    const collisionTiles = map.addTilesetImage('collision', WORLD_ASSET_KEYS.WORLD_COLLISION)
+    const collisionTiles = map.addTilesetImage(
+      "collision",
+      WORLD_ASSET_KEYS.WORLD_COLLISION
+    );
     if (!collisionTiles) {
       console.log(
         `[${WorldScene.name}:create] encountered error while creating collision tileset using data from tiled`
       );
-      return
+      return;
     }
     // the tag Collision below is the name of the map in the level.json file
     // basically matches the name in the json file
@@ -64,9 +79,32 @@ export class WorldScene extends Phaser.Scene {
       console.log(
         `[${WorldScene.name}:create] encountered error while creating collision layer using data from tiled`
       );
-      return
+      return;
     }
-    collisionLayer.setAlpha(TILED_COLLISION_LAYER_ALPHA).setDepth(2)
+    collisionLayer.setAlpha(TILED_COLLISION_LAYER_ALPHA).setDepth(2);
+
+    // provide name of the tileset that is needed to match the tileset that is used in level.json file
+    const encounterTiles = map.addTilesetImage(
+      "encounter",
+      WORLD_ASSET_KEYS.WORLD_ENCOUNTER_ZONE
+    );
+    if (!encounterTiles) {
+      console.log(
+        `[${WorldScene.name}:create] encountered error while creating encounter tileset using data from tiled`
+      );
+      return;
+    }
+
+    // the tag Encounter below is the name of the map in the level.json file
+    // basically matches the name in the json file
+    this.#encounterLayer = map.createLayer("Encounter", encounterTiles, 0, 0);
+    if (!this.#encounterLayer) {
+      console.log(
+        `[${WorldScene.name}:create] encountered error while creating encounter layer using data from tiled`
+      );
+      return;
+    }
+    this.#encounterLayer.setAlpha(TILED_COLLISION_LAYER_ALPHA).setDepth(2);
     // 0,0 for top left hand corner
     this.add.image(0, 0, WORLD_ASSET_KEYS.WORLD_BACKGROUND, 0).setOrigin(0);
     this.#player = new Player({
@@ -74,6 +112,11 @@ export class WorldScene extends Phaser.Scene {
       position: PLAYER_POSITION,
       direction: DIRECTION.DOWN,
       collisionLayer: collisionLayer,
+      //callback invoked to character class such that it will be called when character
+      // class finish moving
+      spriteGridMovementFinishedCallback: () => {
+        this.#handlePlayerMovementUpdate();
+      },
     });
     // camera should move to follow player
     this.cameras.main.startFollow(this.#player.sprite);
@@ -87,14 +130,66 @@ export class WorldScene extends Phaser.Scene {
   }
 
   update(time) {
+    if(this.#wildMonsterEncountered) {
+      this.#player.update(time)
+      return
+    }
     /**
      * check to see if the button is being held down, if it is,
      * move the character
      */
-    const selectedDirection = this.#controls.getDirectionKeyJustPressed();
+    const selectedDirection = this.#controls.getDirectionKeyPressedDown();
     if (selectedDirection !== DIRECTION.NONE) {
       this.#player.moveCharacter(selectedDirection);
     }
     this.#player.update(time);
+  }
+
+  /**
+   * check for the position player agains the encounter layer and see if a tile exist
+   * This logic is similar to collision logic before we move our player
+   * This method is used to check for player position AFTER player moves
+   */
+  #handlePlayerMovementUpdate() {
+    // check if it exist, if not then return
+    if (!this.#encounterLayer) return;
+
+    /**
+     * NOTE: passing in true to getTileAtWorldXY will always return an object
+     * even if no object is found.
+     * If index is not -1, means that encounter zone exist and player is on
+     * encounter zone
+     */
+    const isInEncounterZone =
+      this.#encounterLayer.getTileAtWorldXY(
+        this.#player.sprite.x,
+        this.#player.sprite.y,
+        true
+      ).index !== -1;
+    // if we enter an area that is not an encounter zone, just return it
+    if (!isInEncounterZone) return;
+
+    console.log(
+      `[${WorldScene.name}:handlePlayerMovementUpdate] player is in an encounter zone`
+    );
+    // add logic to check if player encounters a monster
+    this.#wildMonsterEncountered = Math.random() < 0.9;
+    if (this.#wildMonsterEncountered) {
+      console.log(
+        `[${WorldScene.name}:handlePlayerMovementUpdate] player encountered a wild monster`
+      );
+      this.cameras.main.fadeOut(2000);
+      /**
+       * The event listener will run once the fade out animation completes,
+       * basically the line of code above. The code below will wait for the
+       * code above to complete to avoid timing issues
+       */
+      this.cameras.main.once(
+        Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE,
+        () => {
+          this.scene.start(SCENE_KEYS.BATTLE_SCENE);
+        }
+      );
+    }
   }
 }
