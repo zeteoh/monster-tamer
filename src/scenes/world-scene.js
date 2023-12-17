@@ -5,14 +5,7 @@ import { Player } from "../world/characters/player.js";
 import { Controls } from "../utils/controls.js";
 import { DIRECTION } from "../common/direction.js";
 import { TILED_COLLISION_LAYER_ALPHA, TILE_SIZE } from "../config.js";
-
-/**
- * @type {import("../types/typedef.js").Coordinate}
- */
-const PLAYER_POSITION = Object.freeze({
-  x: 6 * TILE_SIZE,
-  y: 21 * TILE_SIZE,
-});
+import { DATA_MANAGER_STORE_KEYS, dataManager } from "../utils/data-manager.js";
 
 export class WorldScene extends Phaser.Scene {
   /**
@@ -109,8 +102,10 @@ export class WorldScene extends Phaser.Scene {
     this.add.image(0, 0, WORLD_ASSET_KEYS.WORLD_BACKGROUND, 0).setOrigin(0);
     this.#player = new Player({
       scene: this,
-      position: PLAYER_POSITION,
-      direction: DIRECTION.DOWN,
+      position: dataManager.store.get(DATA_MANAGER_STORE_KEYS.PLAYER_POSITION),
+      direction: dataManager.store.get(
+        DATA_MANAGER_STORE_KEYS.PLAYER_DIRECTION
+      ),
       collisionLayer: collisionLayer,
       //callback invoked to character class such that it will be called when character
       // class finish moving
@@ -130,9 +125,9 @@ export class WorldScene extends Phaser.Scene {
   }
 
   update(time) {
-    if(this.#wildMonsterEncountered) {
-      this.#player.update(time)
-      return
+    if (this.#wildMonsterEncountered) {
+      this.#player.update(time);
+      return;
     }
     /**
      * check to see if the button is being held down, if it is,
@@ -151,6 +146,14 @@ export class WorldScene extends Phaser.Scene {
    * This method is used to check for player position AFTER player moves
    */
   #handlePlayerMovementUpdate() {
+    dataManager.store.set(DATA_MANAGER_STORE_KEYS.PLAYER_POSITION, {
+      x: this.#player.sprite.x,
+      y: this.#player.sprite.y,
+    });
+    dataManager.store.set(
+      DATA_MANAGER_STORE_KEYS.PLAYER_DIRECTION,
+      this.#player.direction
+    );
     // check if it exist, if not then return
     if (!this.#encounterLayer) return;
 
