@@ -165,7 +165,7 @@ export class WorldScene extends Phaser.Scene {
      * move the character
      */
     const selectedDirection = this.#controls.getDirectionKeyPressedDown();
-    if (selectedDirection !== DIRECTION.NONE) {
+    if (selectedDirection !== DIRECTION.NONE && !this.#isPlayerInputLocked()) {
       this.#player.moveCharacter(selectedDirection);
     }
 
@@ -177,11 +177,17 @@ export class WorldScene extends Phaser.Scene {
   }
 
   #playerHandleInteraction() {
-    if (this.#dialogUi.isVisible) {
+    if (this.#dialogUi.isAnimationPlaying) {
+      return;
+    }
+    if (this.#dialogUi.isVisible && !this.#dialogUi.moreMessagesToShow) {
       this.#dialogUi.hideDialogModal();
       return;
     }
-    this.#dialogUi.showDialogModal();
+    if (this.#dialogUi.isVisible && !this.#dialogUi.moreMessagesToShow) {
+      this.#dialogUi.showNextMessage();
+      return;
+    }
     console.log("start of interaction check");
 
     const { x, y } = this.#player.sprite;
@@ -216,7 +222,7 @@ export class WorldScene extends Phaser.Scene {
       const usePlaceHolderText = this.#player.direction !== DIRECTION.UP;
       let textToShow = CANNOT_READ_SIGN_TEXT;
       if (!usePlaceHolderText) textToShow = msg || SAMPLE_TEXT;
-      console.log(textToShow);
+      this.#dialogUi.showDialogModal([textToShow]);
       return;
     }
   }
@@ -275,5 +281,9 @@ export class WorldScene extends Phaser.Scene {
         }
       );
     }
+  }
+
+  #isPlayerInputLocked() {
+    return this.#dialogUi.isVisible;
   }
 }

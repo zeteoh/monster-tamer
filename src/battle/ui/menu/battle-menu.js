@@ -240,8 +240,6 @@ export class BattleMenu {
       }
       return;
     }
-    // TODO: animate message
-
     animateText(this.#scene, this.#battleTextGameObjectLine1, message, {
       delay: 50,
       callback: () => {

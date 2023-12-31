@@ -1,6 +1,6 @@
 import Phaser from "../lib/phaser.js";
 import { KENNEY_FUTURE_NARROW_FONT_NAME } from "../assets/font-keys.js";
-import { CANNOT_READ_SIGN_TEXT } from "../utils/text-utils.js";
+import { CANNOT_READ_SIGN_TEXT, animateText } from "../utils/text-utils.js";
 import { UI_ASSET_KEYS } from "../assets/asset-key.js";
 
 /**
@@ -87,11 +87,26 @@ export class DialogUi {
   get isVisible() {
     return this.#isVisible;
   }
-
   /**
+   * @type {boolean}
+   */
+  get isAnimationPlaying() {
+    return this.#textAnimationPlaying;
+  }
+  /**
+   * @type {boolean}
+   */
+  get moreMessagesToShow() {
+    return this.#messagesToShow.length > 0;
+  }
+  /**
+   * @param {string[]} messages
+   * @returns {void}
    * updating position of our container so that it will be updated dynamically depending on where the camera is pointing at
    */
-  showDialogModal() {
+  showDialogModal(messages) {
+    this.#messagesToShow = [...messages];
+
     const { x, bottom } = this.#scene.cameras.main.worldView;
     const startX = x + this.#padding;
     // bumps the container up by subtracting the height
@@ -102,14 +117,35 @@ export class DialogUi {
     this.#container.setAlpha(1);
 
     this.#isVisible = true;
-  }
 
+    this.showNextMessage();
+  }
+  /**
+   * @returns {void}
+   */
+  showNextMessage() {
+    if (this.#messagesToShow.length === 0) return;
+
+    this.#uiText.setText("").setAlpha(1);
+    animateText(this.#scene, this.#uiText, this.#messagesToShow.shift(), {
+      delay: 50,
+      callback: () => {
+        this.#textAnimationPlaying = false;
+      },
+    });
+    this.#textAnimationPlaying = true;
+  }
+  /**
+   * @returns {void}
+   */
   hideDialogModal() {
     this.#container.setAlpha(0);
     this.#userInputCursorTween.pause();
     this.#isVisible = false;
   }
-
+  /**
+   * @returns {void}
+   */
   #createPlayerInputCursor() {
     const y = this.#height - 24;
     this.#userInputCursor = this.#scene.add.image(
