@@ -8,6 +8,7 @@ import { TILED_COLLISION_LAYER_ALPHA, TILE_SIZE } from "../config.js";
 import { DATA_MANAGER_STORE_KEYS, dataManager } from "../utils/data-manager.js";
 import { getTargetPositionFromGameObjectPositionAndDirection } from "../utils/grid-utils.js";
 import { CANNOT_READ_SIGN_TEXT, SAMPLE_TEXT } from "../utils/text-utils.js";
+import { DialogUi } from "../world/dialog-ui.js";
 
 /**
  * @typedef TiledObjectProperty
@@ -38,6 +39,10 @@ export class WorldScene extends Phaser.Scene {
    * @type {Phaser.Tilemaps.ObjectLayer}
    */
   #signLayer;
+  /**
+   * @type {DialogUi}
+   */
+  #dialogUi;
   constructor() {
     super({
       key: SCENE_KEYS.WORLD_SCENE,
@@ -144,6 +149,9 @@ export class WorldScene extends Phaser.Scene {
 
     this.#controls = new Controls(this);
 
+    //create dialog ui
+    this.#dialogUi = new DialogUi(this, 1280);
+
     this.cameras.main.fadeIn(1000, 0, 0, 0);
   }
 
@@ -169,6 +177,11 @@ export class WorldScene extends Phaser.Scene {
   }
 
   #playerHandleInteraction() {
+    if (this.#dialogUi.isVisible) {
+      this.#dialogUi.hideDialogModal();
+      return;
+    }
+    this.#dialogUi.showDialogModal();
     console.log("start of interaction check");
 
     const { x, y } = this.#player.sprite;
