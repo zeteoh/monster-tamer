@@ -6,6 +6,16 @@ import { Controls } from "../utils/controls.js";
 import { DIRECTION } from "../common/direction.js";
 import { TILED_COLLISION_LAYER_ALPHA, TILE_SIZE } from "../config.js";
 import { DATA_MANAGER_STORE_KEYS, dataManager } from "../utils/data-manager.js";
+import { getTargetPositionFromGameObjectPositionAndDirection } from "../utils/grid-utils.js";
+import { CANNOT_READ_SIGN_TEXT, SAMPLE_TEXT } from "../utils/text-utils.js";
+
+/**
+ * @typedef TiledObjectProperty
+ * @type {object}
+ * @property {string} name
+ * @property {string} type
+ * @property {any} value
+ */
 
 export class WorldScene extends Phaser.Scene {
   /**
@@ -24,6 +34,10 @@ export class WorldScene extends Phaser.Scene {
    * @type {boolean}
    */
   #wildMonsterEncountered;
+  /**
+   * @type {Phaser.Tilemaps.ObjectLayer}
+   */
+  #signLayer;
   constructor() {
     super({
       key: SCENE_KEYS.WORLD_SCENE,
@@ -75,6 +89,15 @@ export class WorldScene extends Phaser.Scene {
       return;
     }
     collisionLayer.setAlpha(TILED_COLLISION_LAYER_ALPHA).setDepth(2);
+
+    // create interactive layer
+    this.#signLayer = map.getObjectLayer("Sign");
+    if (!this.#signLayer) {
+      console.log(
+        `[${WorldScene.name}:create] encountered error while creating sign layer using data from tiled`
+      );
+      return;
+    }
 
     // provide name of the tileset that is needed to match the tileset that is used in level.json file
     const encounterTiles = map.addTilesetImage(
@@ -137,7 +160,52 @@ export class WorldScene extends Phaser.Scene {
     if (selectedDirection !== DIRECTION.NONE) {
       this.#player.moveCharacter(selectedDirection);
     }
+
+    if (this.#controls.wasSpaceKeyPressed() && !this.#player.isMoving) {
+      this.#playerHandleInteraction();
+    }
+
     this.#player.update(time);
+  }
+
+  #playerHandleInteraction() {
+    console.log("start of interaction check");
+
+    const { x, y } = this.#player.sprite;
+    const targetPosition = getTargetPositionFromGameObjectPositionAndDirection(
+      {
+        x,
+        y,
+      },
+      this.#player.direction
+    );
+    const nearbySign = this.#signLayer.objects.find((object) => {
+      if (!object.x || !object.y) return;
+
+      return (
+        // the y value will align with the bottom of the tiled object which is added to the scene
+        // our y value is set to the bottom of the sprite, when we subtract by tile size, we basically push the y to the top to get the correct y value
+        object.x === targetPosition.x &&
+        object.y - TILE_SIZE === targetPosition.y
+      );
+    });
+
+    if (nearbySign) {
+      /**
+       * @type {TiledObjectProperty[]}
+       */
+      const props = nearbySign.properties;
+      /**
+       * @type {string}
+       */
+      const msg = props.find((prop) => prop.name === "message")?.value;
+
+      const usePlaceHolderText = this.#player.direction !== DIRECTION.UP;
+      let textToShow = CANNOT_READ_SIGN_TEXT;
+      if (!usePlaceHolderText) textToShow = msg || SAMPLE_TEXT;
+      console.log(textToShow);
+      return;
+    }
   }
 
   /**
