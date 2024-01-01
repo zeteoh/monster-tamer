@@ -165,10 +165,15 @@ export class WorldScene extends Phaser.Scene {
       spriteGridMovementFinishedCallback: () => {
         this.#handlePlayerMovementUpdate();
       },
+      otherCharacterToCheckCollisionsWith: this.#npcs,
     });
     // camera should move to follow player
     this.cameras.main.startFollow(this.#player.sprite);
 
+    // update our collisions with npcs
+    this.#npcs.forEach((npc) =>
+      npc.addCharacterToCheckCollisionsWith(this.#player)
+    );
     // add in foreground, giving the game an extra depth
     this.add.image(0, 0, WORLD_ASSET_KEYS.WORLD_FOREGROUND, 0).setOrigin(0);
 

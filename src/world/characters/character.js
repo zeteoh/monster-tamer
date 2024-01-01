@@ -21,6 +21,7 @@ import { exhaustiveGuard } from "../../utils/guard.js";
  * @property {()=>void} [spriteGridMovementFinishedCallback] an optional callback that will be called
  * @property {CharacterIdleFrameConfig} idleFrameConfig
  * @property {Phaser.Tilemaps.TilemapLayer} [collisionLayer]
+ * @property {Character[]} [otherCharacterToCheckCollisionsWith]
  */
 
 export class Character {
@@ -72,6 +73,10 @@ export class Character {
    */
   _collisionLayer;
   /**
+   *@protected @type {Character[]}
+   */
+  _otherCharacterToCheckCollisionsWith;
+  /**
    *
    * @param {CharacterConfig} config
    */
@@ -84,6 +89,8 @@ export class Character {
     this._idleFrameConfig = config.idleFrameConfig;
     this._origin = config.origin ? { ...config.origin } : { x: 0, y: 0 };
     this._collisionLayer = config.collisionLayer;
+    this._otherCharacterToCheckCollisionsWith =
+      config.otherCharacterToCheckCollisionsWith || [];
     this._phaserGameObject = this._scene.add
       .sprite(
         config.position.x,
@@ -127,6 +134,15 @@ export class Character {
 
   /**
    *
+   * @param {Character} character
+   * @returns {void}
+   */
+  addCharacterToCheckCollisionsWith(character) {
+    this._otherCharacterToCheckCollisionsWith.push(character);
+  }
+
+  /**
+   *
    * @param {import("../../common/direction").Direction} direction
    */
   _moveSprite(direction) {
@@ -153,7 +169,10 @@ export class Character {
       this._direction
     );
 
-    return this.#doesPositionCollideWithCollisionLayer(updatedPosition);
+    return (
+      this.#doesPositionCollideWithCollisionLayer(updatedPosition) ||
+      this.#doesPositionCollideWithOtherCharacter(updatedPosition)
+    );
   }
 
   /**
@@ -228,8 +247,8 @@ export class Character {
   }
 
   /**
-   * 
-   * @param {import("../../types/typedef").Coordinate} position 
+   *
+   * @param {import("../../types/typedef").Coordinate} position
    * @returns {boolean}
    */
   #doesPositionCollideWithCollisionLayer(position) {
@@ -244,7 +263,32 @@ export class Character {
      * return null, passing true means that it will always return a pahser tile
      * will return -1 if it doesnt exist
      */
-    const tile = this._collisionLayer.getTileAtWorldXY(x,y, true)
-    return tile.index !== -1
+    const tile = this._collisionLayer.getTileAtWorldXY(x, y, true);
+    return tile.index !== -1;
+  }
+
+  /**
+   *
+   * @param {import("../../types/typedef").Coordinate} position
+   * @returns {boolean}
+   */
+  #doesPositionCollideWithOtherCharacter(position) {
+    const { x, y } = position;
+    if (this._otherCharacterToCheckCollisionsWith.length === 0) return;
+
+    /**
+     * makes sure that the character moves completely out of position before the player can move into the tile. thats why previous
+     * target position is checked
+     */
+    const collidesWithACharacter =
+      this._otherCharacterToCheckCollisionsWith.some((character) => {
+        return (
+          (character._targetPosition.x === x &&
+            character._targetPosition.y === y) ||
+          (character._previousTargetPosition.x === x &&
+            character._previousTargetPosition.y === y)
+        );
+      });
+    return collidesWithACharacter;
   }
 }
