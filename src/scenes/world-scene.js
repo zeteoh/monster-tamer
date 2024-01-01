@@ -9,6 +9,7 @@ import { DATA_MANAGER_STORE_KEYS, dataManager } from "../utils/data-manager.js";
 import { getTargetPositionFromGameObjectPositionAndDirection } from "../utils/grid-utils.js";
 import { CANNOT_READ_SIGN_TEXT, SAMPLE_TEXT } from "../utils/text-utils.js";
 import { DialogUi } from "../world/dialog-ui.js";
+import { NPC } from "../world/characters/npc.js";
 
 /**
  * @typedef TiledObjectProperty
@@ -17,6 +18,22 @@ import { DialogUi } from "../world/dialog-ui.js";
  * @property {string} type
  * @property {any} value
  */
+
+const TILED_SIGN_PROPERTY = Object.freeze({
+  MESSAGE: "MESSAGE",
+});
+
+const CUSTOM_TILED_TYPES = Object.freeze({
+  NPC: "npc",
+  NPC_PATH: "npc_path",
+});
+
+const TILED_NPC_PROPERTY = Object.freeze({
+  IS_SPAWN_POINT: "is_spawn_point",
+  MOVEMENT_PATTERN: "movement_pattern",
+  MESSAGES: "messages",
+  FRAME: "frame",
+});
 
 export class WorldScene extends Phaser.Scene {
   /**
@@ -43,6 +60,10 @@ export class WorldScene extends Phaser.Scene {
    * @type {DialogUi}
    */
   #dialogUi;
+  /**
+   * @type {NPC[]}
+   */
+  #npcs;
   constructor() {
     super({
       key: SCENE_KEYS.WORLD_SCENE,
@@ -128,6 +149,10 @@ export class WorldScene extends Phaser.Scene {
     this.#encounterLayer.setAlpha(TILED_COLLISION_LAYER_ALPHA).setDepth(2);
     // 0,0 for top left hand corner
     this.add.image(0, 0, WORLD_ASSET_KEYS.WORLD_BACKGROUND, 0).setOrigin(0);
+
+    //create npcs
+    this.#createNPCs(map);
+
     this.#player = new Player({
       scene: this,
       position: dataManager.store.get(DATA_MANAGER_STORE_KEYS.PLAYER_POSITION),
@@ -174,6 +199,10 @@ export class WorldScene extends Phaser.Scene {
     }
 
     this.#player.update(time);
+
+    this.#npcs.forEach((npc) => {
+      npc.update(time);
+    });
   }
 
   #playerHandleInteraction() {
@@ -217,7 +246,9 @@ export class WorldScene extends Phaser.Scene {
       /**
        * @type {string}
        */
-      const msg = props.find((prop) => prop.name === "message")?.value;
+      const msg = props.find(
+        (prop) => prop.name === TILED_SIGN_PROPERTY.MESSAGE
+      )?.value;
 
       const usePlaceHolderText = this.#player.direction !== DIRECTION.UP;
       let textToShow = CANNOT_READ_SIGN_TEXT;
@@ -285,5 +316,42 @@ export class WorldScene extends Phaser.Scene {
 
   #isPlayerInputLocked() {
     return this.#dialogUi.isVisible;
+  }
+  /**
+   *
+   * @param {Phaser.Tilemaps.Tilemap} map
+   * @returns {void}
+   */
+  #createNPCs(map) {
+    this.#npcs = [];
+
+    // because each layer we have like NPC1, NPC2, so if we filter by including
+    // substring of NPC, we will get all the layers with npc
+    const npcLayers = map
+      .getObjectLayerNames()
+      .filter((layerName) => layerName.includes("NPC"));
+    npcLayers.forEach((layerName) => {
+      const layer = map.getObjectLayer(layerName);
+      // return single tile object that is of type npc
+      console.log(layer.objects);
+      const npcObject = layer.objects.find((obj) => {
+        // type is the custom class we added to object
+        return obj.type === CUSTOM_TILED_TYPES.NPC;
+      });
+      if (!npcObject || npcObject.x === undefined || npcObject.y === undefined)
+        return;
+
+      const npcFrame =
+        npcObject.properties.find(
+          (property) => property.name === TILED_NPC_PROPERTY.FRAME
+        )?.value || "0";
+      const npc = new NPC({
+        scene: this,
+        position: { x: npcObject.x, y: npcObject.y - TILE_SIZE },
+        direction: DIRECTION.DOWN,
+        frame: parseInt(npcFrame, 10),
+      });
+      this.#npcs.push(npc);
+    });
   }
 }

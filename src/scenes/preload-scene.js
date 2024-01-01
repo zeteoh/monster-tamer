@@ -167,9 +167,8 @@ export class PreloadScene extends Phaser.Scene {
         frameHeight: 88,
       }
     );
-
     this.load.spritesheet(
-      CHARACTER_ASSET_KEYS.PLAYER,
+      CHARACTER_ASSET_KEYS.NPC,
       `${pbGamesAssetPath}/characters.png`,
       {
         frameWidth: 16,
