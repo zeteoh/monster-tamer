@@ -2,11 +2,27 @@ import { CHARACTER_ASSET_KEYS } from "../../assets/asset-key.js";
 import { DIRECTION } from "../../common/direction.js";
 import { exhaustiveGuard } from "../../utils/guard.js";
 import { Character } from "./character.js";
+
 /**
- * @typedef {Omit<import('./character').CharacterConfig, 'assetKey' | 'idleFrameConfig'> & {frame: number}} NpcConfig
+ * @typedef NPCConfigProps
+ * @type {object}
+ * @property {number} frame
+ * @property {string[]} messages
+ */
+
+/**
+ * @typedef {Omit<import('./character').CharacterConfig, 'assetKey' | 'idleFrameConfig'> & NPCConfigProps} NpcConfig
  */
 
 export class NPC extends Character {
+  /**
+   * @type {string[]}
+   */
+  #messages;
+  /**
+   * @type {boolean}
+   */
+  #talkingToPlayer;
   /**
    *
    * @param {NpcConfig} config
@@ -25,6 +41,31 @@ export class NPC extends Character {
       },
     });
     this._phaserGameObject.setScale(4);
+    this.#messages = config.messages;
+    this.#talkingToPlayer = false;
+  }
+
+  /**
+   *
+   * @returns {string[]}
+   */
+  get messages() {
+    return [...this.#messages];
+  }
+
+  /**
+   *
+   * @returns {boolean}
+   */
+  get isTalkingToPlayer() {
+    return this.#talkingToPlayer;
+  }
+
+  /**
+   * @param {boolean} val
+   */
+  set isTalkingToPlayer(val) {
+    this.#talkingToPlayer = val;
   }
 
   /**

@@ -64,6 +64,10 @@ export class WorldScene extends Phaser.Scene {
    * @type {NPC[]}
    */
   #npcs;
+  /**
+   * @type {NPC | undefined}
+   */
+  #npcPlayerIsInteractingWith;
   constructor() {
     super({
       key: SCENE_KEYS.WORLD_SCENE,
@@ -72,7 +76,9 @@ export class WorldScene extends Phaser.Scene {
   }
 
   init() {
+    console.log(`[${WorldScene.name}:init] invoked`);
     this.#wildMonsterEncountered = false;
+    this.#npcPlayerIsInteractingWith = undefined;
   }
 
   create() {
@@ -216,6 +222,10 @@ export class WorldScene extends Phaser.Scene {
     }
     if (this.#dialogUi.isVisible && !this.#dialogUi.moreMessagesToShow) {
       this.#dialogUi.hideDialogModal();
+      if (this.#npcPlayerIsInteractingWith) {
+        this.#npcPlayerIsInteractingWith.isTalkingToPlayer = false;
+        this.#npcPlayerIsInteractingWith = undefined;
+      }
       return;
     }
     if (this.#dialogUi.isVisible && !this.#dialogUi.moreMessagesToShow) {
@@ -260,6 +270,20 @@ export class WorldScene extends Phaser.Scene {
       if (!usePlaceHolderText) textToShow = msg || SAMPLE_TEXT;
       this.#dialogUi.showDialogModal([textToShow]);
       return;
+    }
+
+    const nearbyNpc = this.#npcs.find((npc) => {
+      return (
+        // check if the player target position has an npc, if there is let player talk to npc
+        npc.sprite.x === targetPosition.x && npc.sprite.y === targetPosition.y
+      );
+    });
+
+    if (nearbyNpc) {
+      nearbyNpc.facePlayer(this.#player.direction);
+      nearbyNpc.isTalkingToPlayer = true;
+      this.#npcPlayerIsInteractingWith = nearbyNpc;
+      this.#dialogUi.showDialogModal(nearbyNpc.messages);
     }
   }
 
@@ -346,15 +370,27 @@ export class WorldScene extends Phaser.Scene {
       if (!npcObject || npcObject.x === undefined || npcObject.y === undefined)
         return;
 
+      // Checkin for frame
       const npcFrame =
         npcObject.properties.find(
           (property) => property.name === TILED_NPC_PROPERTY.FRAME
         )?.value || "0";
+
+      // Checkin for messages
+      const npcMessagesString =
+        npcObject.properties.find(
+          (property) => property.name === TILED_NPC_PROPERTY.MESSAGES
+        )?.value || "";
+
+      // in the tiled, we separated the messages setence with :: delimiter
+      const npcMessages = npcMessagesString.split("::");
+
       const npc = new NPC({
         scene: this,
         position: { x: npcObject.x, y: npcObject.y - TILE_SIZE },
         direction: DIRECTION.DOWN,
         frame: parseInt(npcFrame, 10),
+        messages: npcMessages,
       });
       this.#npcs.push(npc);
     });
