@@ -54,6 +54,10 @@ export class NPC extends Character {
    */
   #movementPattern;
   /**
+   * @type {number}
+   */
+  #lastMovementTime;
+  /**
    *
    * @param {NpcConfig} config
    */
@@ -75,6 +79,8 @@ export class NPC extends Character {
     this.#npcPath = config.npcPath;
     this.#currentPathIndex = 0;
     this.#movementPattern = config.movementPattern;
+    //to get random number use phaser math, somewhere between 3.5 and 5 seconds
+    this.#lastMovementTime = Phaser.Math.Between(3500, 5000);
     this._phaserGameObject.setScale(4);
   }
 
@@ -152,29 +158,87 @@ export class NPC extends Character {
 
     if (this.#movementPattern === NPC_MOVEMENT_PATTERN.IDLE) return;
 
-    /**
-     * @type {import("../../common/direction.js").Direction}
-     */
-    let characterDirection = DIRECTION.NONE;
-    let nextPosition = this.#npcPath[this.#currentPathIndex + 1];
+    // the time below refers to many many milliseconds have passed since the game started.
+    // Assuming lastMovementTime is 3.5 seconds, the time would need to run for more than 3.5 seconds for npc to move
+    if (this.#lastMovementTime < time) {
+      /**
+       * @type {import("../../common/direction.js").Direction}
+       */
+      let characterDirection = DIRECTION.NONE;
+      let nextPosition = this.#npcPath[this.#currentPathIndex + 1];
 
-    // reset to original position if the enxt path is empty
-    if (nextPosition === undefined) {
-      nextPosition = this.#npcPath[0];
-    } else {
-      this.#currentPathIndex = this.#currentPathIndex + 1;
+      const prevPosition = this.#npcPath[this.#currentPathIndex];
+      if (
+        prevPosition.x !== this._phaserGameObject.x ||
+        prevPosition.y !== this._phaserGameObject.y
+      ) {
+        nextPosition = this.#npcPath[this.#currentPathIndex];
+      } else {
+        // reset to original position if the enxt path is empty
+
+        if (nextPosition === undefined) {
+          nextPosition = this.#npcPath[0];
+          this.#currentPathIndex = 0;
+        } else {
+          this.#currentPathIndex = this.#currentPathIndex + 1;
+        }
+      }
+
+      // logic here is if the npc next position is greater than the current game object's x (npc), that means the npc moved to the right
+      // since the x value increases
+      if (nextPosition.x > this._phaserGameObject.x) {
+        characterDirection = DIRECTION.RIGHT;
+      } else if (nextPosition.x < this._phaserGameObject.x) {
+        characterDirection = DIRECTION.LEFT;
+      } else if (nextPosition.y < this._phaserGameObject.y) {
+        characterDirection = DIRECTION.UP;
+      } else if (nextPosition.y > this._phaserGameObject.y) {
+        characterDirection = DIRECTION.DOWN;
+      }
+
+      this.moveCharacter(characterDirection);
+      this.#lastMovementTime = time + Phaser.Math.Between(2000, 5000);
     }
+  }
 
-    if (nextPosition.x > this._phaserGameObject.x) {
-      characterDirection = DIRECTION.RIGHT;
-    } else if (nextPosition.x < this._phaserGameObject.x) {
-      characterDirection = DIRECTION.LEFT;
-    } else if (nextPosition.y < this._phaserGameObject.y) {
-      characterDirection = DIRECTION.UP;
-    } else if (nextPosition.y > this._phaserGameObject.y) {
-      characterDirection = DIRECTION.DOWN;
+  /**
+   *
+   * @param {import("../../common/direction").Direction} direction
+   */
+  moveCharacter(direction) {
+    super.moveCharacter(direction);
+
+    switch (this._direction) {
+      case DIRECTION.DOWN:
+      case DIRECTION.RIGHT:
+      case DIRECTION.UP:
+        // isplaying checks if the animation is playing (set to true for sprite)
+        // check if currentanim is playing, if a different direction key
+        // is pressed, we will play a new animation. if the same key is pressed,
+        // we dont play a new animation
+        if (
+          !this._phaserGameObject.anims.isPlaying ||
+          this._phaserGameObject.anims.currentAnim?.key !==
+            `NPC_1_${this.direction}`
+        ) {
+          this._phaserGameObject.play(`NPC_1_${this._direction}`);
+          this._phaserGameObject.setFlipX(false);
+        }
+        break;
+      case DIRECTION.LEFT:
+        if (
+          !this._phaserGameObject.anims.isPlaying ||
+          this._phaserGameObject.anims.currentAnim?.key !==
+            `NPC_1_${DIRECTION.RIGHT}`
+        ) {
+          this._phaserGameObject.play(`NPC_1_${DIRECTION.RIGHT}`);
+          this._phaserGameObject.setFlipX(true);
+        }
+        break;
+      case DIRECTION.NONE:
+        break;
+      default:
+        exhaustiveGuard(this._direction);
     }
-
-    this.moveCharacter(characterDirection);
   }
 }
